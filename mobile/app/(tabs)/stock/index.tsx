@@ -4,9 +4,13 @@ import { View,
   FlatList,
   StyleSheet,
   TouchableOpacity,
-  RefreshControl } from 'react-native';
+  RefreshControl,
+  Modal,
+  TextInput,
+  Alert,
+  ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { inventoryApi } from '@/lib/api/inventory';
 import { warehousesApi } from '@/lib/api/warehouses';
@@ -16,11 +20,16 @@ import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { RoleGate } from '@/components/RoleGate';
-import type { InventoryResponse, WarehouseResponse } from '@erp/api-types';
+import { useHasFeature } from '@/hooks/useHasFeature';
+import { formatApiError } from '@/lib/http/errors';
+import type { InventoryResponse } from '@erp/api-types';
 
 export default function StockScreen(): React.ReactElement {
-  const router = useRouter();
+  const router       = useRouter();
+  const queryClient  = useQueryClient();
+  const canWrite     = useHasFeature('INVENTORY_WRITE');
   const [selectedWarehouse, setSelectedWarehouse] = useState<string | null>(null);
+  const [editing,           setEditing]           = useState<InventoryResponse | null>(null);
 
   const { data: warehouses } = useQuery({
     queryKey: queryKeys.warehouses,
@@ -48,6 +57,17 @@ export default function StockScreen(): React.ReactElement {
     products?.forEach((p) => { m[p.id] = p.name; });
     return m;
   }, [products]);
+
+  const thresholdsMutation = useMutation({
+    mutationFn: (req: { productId: string; warehouseId: string; minQuantity: number | null; maxQuantity: number | null }) =>
+      inventoryApi.updateThresholds(req),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.stockAll });
+      if (selectedWarehouse) queryClient.invalidateQueries({ queryKey: queryKeys.stockByWarehouse(selectedWarehouse) });
+      setEditing(null);
+    },
+    onError: (err) => Alert.alert(sl.common.error, formatApiError(err)),
+  });
 
   if (stockQuery.isLoading) return <LoadingView />;
   if (stockQuery.isError)   return <ErrorView onRetry={stockQuery.refetch} />;
@@ -105,6 +125,8 @@ export default function StockScreen(): React.ReactElement {
             item={item}
             warehouseName={warehouseMap[item.warehouseId] ?? item.warehouseId.slice(0, 8) + '…'}
             productName={productMap[item.productId] ?? item.productId.slice(0, 8) + '…'}
+            canWrite={canWrite}
+            onEditThresholds={() => setEditing(item)}
           />
         )}
       />
@@ -118,16 +140,34 @@ export default function StockScreen(): React.ReactElement {
           <Text style={styles.fabText}>＋</Text>
         </TouchableOpacity>
       </RoleGate>
+
+      {editing && (
+        <EditThresholdsModal
+          item={editing}
+          productName={productMap[editing.productId] ?? editing.productId.slice(0, 8) + '…'}
+          warehouseName={warehouseMap[editing.warehouseId] ?? editing.warehouseId.slice(0, 8) + '…'}
+          submitting={thresholdsMutation.isPending}
+          onCancel={() => setEditing(null)}
+          onSubmit={(minQuantity, maxQuantity) => thresholdsMutation.mutate({
+            productId:   editing.productId,
+            warehouseId: editing.warehouseId,
+            minQuantity,
+            maxQuantity,
+          })}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
 function StockCard({
-  item, warehouseName, productName,
+  item, warehouseName, productName, canWrite, onEditThresholds,
 }: {
   item: InventoryResponse;
   warehouseName: string;
   productName: string;
+  canWrite: boolean;
+  onEditThresholds: () => void;
 }): React.ReactElement {
   // Gap 13 closed: use the server-supplied min threshold when present.
   // Items still without thresholds (created pre-migration) get a sensible
@@ -153,7 +193,73 @@ function StockCard({
         {item.minQuantity != null && ` · min ${item.minQuantity}`}
         {item.maxQuantity != null && ` · max ${item.maxQuantity}`}
       </Text>
+      {canWrite && (
+        <TouchableOpacity style={styles.cardAction} onPress={onEditThresholds}>
+          <Text style={styles.cardActionText}>{sl.stock.editThresholds}</Text>
+        </TouchableOpacity>
+      )}
     </View>
+  );
+}
+
+function EditThresholdsModal({
+  item, productName, warehouseName, submitting, onCancel, onSubmit,
+}: {
+  item: InventoryResponse;
+  productName: string;
+  warehouseName: string;
+  submitting: boolean;
+  onCancel: () => void;
+  onSubmit: (minQuantity: number | null, maxQuantity: number | null) => void;
+}): React.ReactElement {
+  const [min, setMin] = useState(item.minQuantity == null ? '' : String(item.minQuantity));
+  const [max, setMax] = useState(item.maxQuantity == null ? '' : String(item.maxQuantity));
+  const minNum = min.trim() ? parseInt(min, 10) : null;
+  const maxNum = max.trim() ? parseInt(max, 10) : null;
+  const valid  = (minNum === null || minNum >= 0)
+              && (maxNum === null || maxNum >= 0)
+              && (minNum === null || maxNum === null || maxNum >= minNum);
+
+  return (
+    <Modal animationType="fade" transparent visible onRequestClose={onCancel}>
+      <View style={styles.modalBackdrop}>
+        <View style={styles.modalCard}>
+          <Text style={styles.modalTitle}>{sl.stock.editThresholds}</Text>
+          <Text style={styles.modalMeta} numberOfLines={2}>
+            {productName} · {warehouseName} · {sl.stock.quantity}: {item.quantity}
+          </Text>
+
+          <View style={styles.thresholdsRow}>
+            <View style={styles.thresholdCol}>
+              <Text style={styles.label}>{sl.stock.minThreshold}</Text>
+              <TextInput style={styles.input} value={min} onChangeText={setMin} keyboardType="number-pad" placeholder="—" />
+            </View>
+            <View style={styles.thresholdCol}>
+              <Text style={styles.label}>{sl.stock.maxThreshold}</Text>
+              <TextInput style={styles.input} value={max} onChangeText={setMax} keyboardType="number-pad" placeholder="—" />
+            </View>
+          </View>
+          {!valid && <Text style={styles.thresholdWarn}>{sl.stock.thresholdInvalid}</Text>}
+          <Text style={styles.modalHint}>{sl.stock.thresholdHint}</Text>
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} disabled={submitting}>
+              <Text style={styles.cancelBtnText}>{sl.common.cancel}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.submitBtn, (!valid || submitting) && styles.submitBtnDisabled]}
+              onPress={() => onSubmit(minNum, maxNum)}
+              disabled={!valid || submitting}
+            >
+              {submitting
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.submitBtnText}>{sl.common.save}</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -180,6 +286,25 @@ const styles = StyleSheet.create({
   warehouse:      { fontSize: 12, color: '#94a3b8', marginBottom: 8 },
   quantity:       { fontSize: 32, fontWeight: '800', color: '#1e293b' },
   quantityLabel:  { fontSize: 11, color: '#94a3b8' },
+  cardAction:     { alignSelf: 'flex-start', marginTop: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: '#dbeafe' },
+  cardActionText: { color: '#3b82f6', fontSize: 12, fontWeight: '600' },
   fab:            { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: '#3b82f6', justifyContent: 'center', alignItems: 'center', elevation: 6, shadowColor: '#3b82f6', shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } },
   fabText:        { color: '#fff', fontSize: 28, fontWeight: '300', lineHeight: 32 },
+  // Modal
+  modalBackdrop:  { flex: 1, backgroundColor: 'rgba(15,23,42,0.45)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  modalCard:      { width: '100%', maxWidth: 420, backgroundColor: '#fff', borderRadius: 14, padding: 18, gap: 8 },
+  modalTitle:     { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+  modalMeta:      { fontSize: 12, color: '#64748b' },
+  modalHint:      { fontSize: 11, color: '#94a3b8', marginTop: 4 },
+  thresholdsRow:  { flexDirection: 'row', gap: 10, marginTop: 8 },
+  thresholdCol:   { flex: 1 },
+  label:          { fontSize: 12, color: '#475569', marginBottom: 4, fontWeight: '600' },
+  input:          { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, fontSize: 14, color: '#1e293b', backgroundColor: '#f9fafb' },
+  thresholdWarn:  { color: '#b45309', fontSize: 11 },
+  modalActions:   { flexDirection: 'row', gap: 8, marginTop: 12 },
+  cancelBtn:      { flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor: '#d1d5db', alignItems: 'center', backgroundColor: '#fff' },
+  cancelBtnText:  { color: '#374151', fontSize: 14, fontWeight: '600' },
+  submitBtn:      { flex: 1, backgroundColor: '#3b82f6', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  submitBtnDisabled: { opacity: 0.5 },
+  submitBtnText:  { color: '#fff', fontWeight: '700', fontSize: 14 },
 });
