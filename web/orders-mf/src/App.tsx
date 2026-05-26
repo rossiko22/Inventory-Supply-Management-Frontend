@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useStrings } from './i18n';
 
 type OrderStatus = 'Requested' | 'Approved' | 'Delivered' | 'Closed';
 interface Order {
@@ -14,7 +15,7 @@ const STATUS_NEXT: Record<number, number>      = { 0: 1, 1: 2, 2: 3 };
 const STATUS_COLOR: Record<number, string>     = { 0: '#f59e0b', 1: '#3b82f6', 2: '#10b981', 3: '#64748b' };
 
 const API = '/api';
-const s = {
+const styles = {
   wrap:   { padding: '1.5rem' } as React.CSSProperties,
   h1:     { fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', marginBottom: '1.25rem' } as React.CSSProperties,
   table:  { width: '100%', borderCollapse: 'collapse' as const, background: '#fff', borderRadius: 10, overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,.07)' },
@@ -39,6 +40,7 @@ function nameById(options: Option[], id: string) {
 }
 
 export default function App() {
+  const s = useStrings();
   const [orders, setOrders]     = useState<Order[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
@@ -151,65 +153,65 @@ export default function App() {
 
   const field = (key: keyof CreateForm, label: string, options: Option[]) => (
     <div key={key} style={{ marginBottom: '0.875rem' }}>
-      <label style={s.label}>{label}</label>
+      <label style={styles.label}>{label}</label>
       <select
-        style={s.select}
+        style={styles.select}
         value={form[key] as string}
         onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
         required
       >
-        <option value="">— select —</option>
+        <option value="">{s.common.selectPlaceholder}</option>
         {options.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
       </select>
     </div>
   );
 
   return (
-    <div style={s.wrap}>
+    <div style={styles.wrap}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-        <h1 style={{ ...s.h1, marginBottom: 0 }}>Orders</h1>
-        <button style={{ ...s.btn, background: '#3b82f6', color: '#fff' }} onClick={() => setShowCreate(true)}>+ New Order</button>
+        <h1 style={{ ...styles.h1, marginBottom: 0 }}>{s.orders.title}</h1>
+        <button style={{ ...styles.btn, background: '#3b82f6', color: '#fff' }} onClick={() => setShowCreate(true)}>+ {s.orders.newOrder}</button>
       </div>
 
       {error && <p style={{ color: '#dc2626', marginBottom: '1rem' }}>{error}</p>}
-      {loading && <p style={{ color: '#64748b' }}>Loading…</p>}
+      {loading && <p style={{ color: '#64748b' }}>{s.common.loading}</p>}
 
       {!loading && !error && (
-        <table style={s.table}>
+        <table style={styles.table}>
           <thead>
-            <tr>{['Product', 'Company', 'Warehouse', 'Driver', 'Qty', 'Status', 'Delivery', 'Action'].map(h => <th key={h} style={s.th}>{h}</th>)}</tr>
+            <tr>{[s.orders.product, s.orders.company, s.orders.warehouse, s.orders.driver, s.orders.quantity, s.orders.status, s.orders.deliveryDate, s.common.actions].map(h => <th key={h} style={styles.th}>{h}</th>)}</tr>
           </thead>
           <tbody>
             {orders.map(o => (
               <tr key={o.id}>
-                <td style={s.td}>{nameById(products,   o.productId)}</td>
-                <td style={s.td}>{nameById(companies,  o.companyId)}</td>
-                <td style={s.td}>{nameById(warehouses, o.warehouseId)}</td>
-                <td style={s.td}>{nameById(drivers,    o.driverId)}</td>
-                <td style={s.td}>{o.quantity}</td>
-                <td style={s.td}>
+                <td style={styles.td}>{nameById(products,   o.productId)}</td>
+                <td style={styles.td}>{nameById(companies,  o.companyId)}</td>
+                <td style={styles.td}>{nameById(warehouses, o.warehouseId)}</td>
+                <td style={styles.td}>{nameById(drivers,    o.driverId)}</td>
+                <td style={styles.td}>{o.quantity}</td>
+                <td style={styles.td}>
                   <span style={{ padding: '0.2rem 0.6rem', borderRadius: 999, background: STATUS_COLOR[o.status] + '22', color: STATUS_COLOR[o.status], fontWeight: 600, fontSize: '0.8rem' }}>
-                    {STATUS_MAP[o.status]}
+                    {s.orders.statuses[STATUS_MAP[o.status]]}
                   </span>
                 </td>
-                <td style={s.td}>{o.deliveryDate ? o.deliveryDate.slice(0, 10) : '—'}</td>
-                <td style={s.td}>
-                  <button style={{ ...s.btn, background: '#f1f5f9', color: '#334155', marginRight: '0.4rem' }} onClick={() => void openDetail(o.id)}>View</button>
+                <td style={styles.td}>{o.deliveryDate ? o.deliveryDate.slice(0, 10) : '—'}</td>
+                <td style={styles.td}>
+                  <button style={{ ...styles.btn, background: '#f1f5f9', color: '#334155', marginRight: '0.4rem' }} onClick={() => void openDetail(o.id)}>{s.orders.view}</button>
                   {STATUS_NEXT[o.status] !== undefined && (
                     o.status === 2 ? (
-                      <button style={{ ...s.btn, background: '#ede9fe', color: '#6d28d9' }} onClick={() => advanceStatus(o)}>
-                        📎 Upload & Close
+                      <button style={{ ...styles.btn, background: '#ede9fe', color: '#6d28d9' }} onClick={() => advanceStatus(o)}>
+                        📎 {s.orders.uploadAndClose}
                       </button>
                     ) : (
-                      <button style={{ ...s.btn, background: '#e0f2fe', color: '#0369a1' }} onClick={() => advanceStatus(o)}>
-                        → {STATUS_MAP[STATUS_NEXT[o.status]]}
+                      <button style={{ ...styles.btn, background: '#e0f2fe', color: '#0369a1' }} onClick={() => advanceStatus(o)}>
+                        → {s.orders.statuses[STATUS_MAP[STATUS_NEXT[o.status]]]}
                       </button>
                     )
                   )}
                 </td>
               </tr>
             ))}
-            {orders.length === 0 && <tr><td colSpan={8} style={{ ...s.td, textAlign: 'center', color: '#94a3b8' }}>No orders found.</td></tr>}
+            {orders.length === 0 && <tr><td colSpan={8} style={{ ...styles.td, textAlign: 'center', color: '#94a3b8' }}>{s.orders.noOrders}</td></tr>}
           </tbody>
         </table>
       )}
@@ -218,23 +220,23 @@ export default function App() {
       {showCreate && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: 480, boxShadow: '0 8px 40px rgba(0,0,0,.15)', maxHeight: '90vh', overflow: 'auto' }}>
-            <h2 style={{ fontWeight: 700, marginBottom: '1.25rem', color: '#1e293b' }}>Create Order</h2>
+            <h2 style={{ fontWeight: 700, marginBottom: '1.25rem', color: '#1e293b' }}>{s.orders.createOrder}</h2>
             <form onSubmit={handleCreate}>
-              {field('productId',   'Product',   products)}
-              {field('companyId',   'Company',   companies)}
-              {field('warehouseId', 'Warehouse', warehouses)}
-              {field('driverId',    'Driver',    drivers)}
+              {field('productId',   s.orders.product,   products)}
+              {field('companyId',   s.orders.company,   companies)}
+              {field('warehouseId', s.orders.warehouse, warehouses)}
+              {field('driverId',    s.orders.driver,    drivers)}
               <div style={{ marginBottom: '0.875rem' }}>
-                <label style={s.label}>Quantity</label>
-                <input style={s.input} type="number" min={1} value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} required />
+                <label style={styles.label}>{s.orders.quantity}</label>
+                <input style={styles.input} type="number" min={1} value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} required />
               </div>
               <div style={{ marginBottom: '1.25rem' }}>
-                <label style={s.label}>Delivery Date</label>
-                <input style={s.input} type="date" value={form.deliveryDate} onChange={e => setForm(f => ({ ...f, deliveryDate: e.target.value }))} />
+                <label style={styles.label}>{s.orders.deliveryDate}</label>
+                <input style={styles.input} type="date" value={form.deliveryDate} onChange={e => setForm(f => ({ ...f, deliveryDate: e.target.value }))} />
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                <button type="button" style={{ ...s.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setShowCreate(false)}>Cancel</button>
-                <button type="submit" style={{ ...s.btn, background: '#3b82f6', color: '#fff' }}>Create</button>
+                <button type="button" style={{ ...styles.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setShowCreate(false)}>{s.common.cancel}</button>
+                <button type="submit" style={{ ...styles.btn, background: '#3b82f6', color: '#fff' }}>{s.common.create}</button>
               </div>
             </form>
           </div>
@@ -245,13 +247,13 @@ export default function App() {
       {closingOrder && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 70 }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: 440, boxShadow: '0 8px 40px rgba(0,0,0,.15)' }}>
-            <h2 style={{ fontWeight: 700, marginBottom: '0.5rem', color: '#1e293b' }}>Close Order</h2>
+            <h2 style={{ fontWeight: 700, marginBottom: '0.5rem', color: '#1e293b' }}>{s.orders.closeOrder}</h2>
             <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
-              Upload a delivery document to close <strong>{nameById(products, closingOrder.productId)}</strong> for <strong>{nameById(companies, closingOrder.companyId)}</strong>. The order will move to <strong>Closed</strong> once the upload succeeds.
+              {s.orders.uploadHint}
             </p>
             <form onSubmit={handleUploadAndClose}>
               <div style={{ marginBottom: '1.25rem' }}>
-                <label style={s.label}>Document (PDF)</label>
+                <label style={styles.label}>{s.orders.document}</label>
                 <input
                   type="file"
                   accept="application/pdf,.pdf"
@@ -266,9 +268,9 @@ export default function App() {
                 )}
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                <button type="button" style={{ ...s.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => { setClosingOrder(null); setUploadFile(null); }} disabled={uploadBusy}>Cancel</button>
-                <button type="submit" style={{ ...s.btn, background: '#6d28d9', color: '#fff' }} disabled={!uploadFile || uploadBusy}>
-                  {uploadBusy ? 'Uploading…' : 'Upload & Close'}
+                <button type="button" style={{ ...styles.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => { setClosingOrder(null); setUploadFile(null); }} disabled={uploadBusy}>{s.common.cancel}</button>
+                <button type="submit" style={{ ...styles.btn, background: '#6d28d9', color: '#fff' }} disabled={!uploadFile || uploadBusy}>
+                  {uploadBusy ? s.orders.uploading : s.orders.uploadAndClose}
                 </button>
               </div>
             </form>
@@ -281,31 +283,31 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60 }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: 480, boxShadow: '0 8px 40px rgba(0,0,0,.15)', maxHeight: '90vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ fontWeight: 700, color: '#1e293b', margin: 0 }}>Order Detail</h2>
+              <h2 style={{ fontWeight: 700, color: '#1e293b', margin: 0 }}>{s.orders.orderDetail}</h2>
               <button onClick={() => setDetail(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.25rem', color: '#64748b' }}>×</button>
             </div>
-            {detailLoading && <p style={{ color: '#64748b' }}>Loading…</p>}
+            {detailLoading && <p style={{ color: '#64748b' }}>{s.common.loading}</p>}
             {detail && (
               <dl style={{ display: 'grid', gridTemplateColumns: '120px 1fr', rowGap: '0.5rem', columnGap: '0.75rem', fontSize: '0.875rem' }}>
                 <dt style={{ color: '#64748b' }}>ID</dt><dd style={{ margin: 0 }}><code>{detail.id}</code></dd>
-                <dt style={{ color: '#64748b' }}>Product</dt><dd style={{ margin: 0 }}>{nameById(products, detail.productId)}</dd>
-                <dt style={{ color: '#64748b' }}>Company</dt><dd style={{ margin: 0 }}>{nameById(companies, detail.companyId)}</dd>
-                <dt style={{ color: '#64748b' }}>Warehouse</dt><dd style={{ margin: 0 }}>{nameById(warehouses, detail.warehouseId)}</dd>
-                <dt style={{ color: '#64748b' }}>Driver</dt><dd style={{ margin: 0 }}>{nameById(drivers, detail.driverId)}</dd>
-                <dt style={{ color: '#64748b' }}>Quantity</dt><dd style={{ margin: 0 }}>{detail.quantity}</dd>
-                <dt style={{ color: '#64748b' }}>Status</dt>
+                <dt style={{ color: '#64748b' }}>{s.orders.product}</dt><dd style={{ margin: 0 }}>{nameById(products, detail.productId)}</dd>
+                <dt style={{ color: '#64748b' }}>{s.orders.company}</dt><dd style={{ margin: 0 }}>{nameById(companies, detail.companyId)}</dd>
+                <dt style={{ color: '#64748b' }}>{s.orders.warehouse}</dt><dd style={{ margin: 0 }}>{nameById(warehouses, detail.warehouseId)}</dd>
+                <dt style={{ color: '#64748b' }}>{s.orders.driver}</dt><dd style={{ margin: 0 }}>{nameById(drivers, detail.driverId)}</dd>
+                <dt style={{ color: '#64748b' }}>{s.orders.quantity}</dt><dd style={{ margin: 0 }}>{detail.quantity}</dd>
+                <dt style={{ color: '#64748b' }}>{s.orders.status}</dt>
                 <dd style={{ margin: 0 }}>
                   <span style={{ padding: '0.2rem 0.6rem', borderRadius: 999, background: STATUS_COLOR[detail.status] + '22', color: STATUS_COLOR[detail.status], fontWeight: 600 }}>
-                    {STATUS_MAP[detail.status]}
+                    {s.orders.statuses[STATUS_MAP[detail.status]]}
                   </span>
                 </dd>
-                <dt style={{ color: '#64748b' }}>Delivery</dt><dd style={{ margin: 0 }}>{detail.deliveryDate ? detail.deliveryDate.slice(0, 10) : '—'}</dd>
-                {detail.createdAt && <><dt style={{ color: '#64748b' }}>Created</dt><dd style={{ margin: 0 }}>{new Date(detail.createdAt).toLocaleString()}</dd></>}
-                {detail.lastModified && <><dt style={{ color: '#64748b' }}>Modified</dt><dd style={{ margin: 0 }}>{new Date(detail.lastModified).toLocaleString()}</dd></>}
+                <dt style={{ color: '#64748b' }}>{s.orders.deliveryDate}</dt><dd style={{ margin: 0 }}>{detail.deliveryDate ? detail.deliveryDate.slice(0, 10) : '—'}</dd>
+                {detail.createdAt && <><dt style={{ color: '#64748b' }}>{s.orders.created}</dt><dd style={{ margin: 0 }}>{new Date(detail.createdAt).toLocaleString()}</dd></>}
+                {detail.lastModified && <><dt style={{ color: '#64748b' }}>{s.orders.modified}</dt><dd style={{ margin: 0 }}>{new Date(detail.lastModified).toLocaleString()}</dd></>}
               </dl>
             )}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
-              <button style={{ ...s.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setDetail(null)}>Close</button>
+              <button style={{ ...styles.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setDetail(null)}>{s.common.close}</button>
             </div>
           </div>
         </div>

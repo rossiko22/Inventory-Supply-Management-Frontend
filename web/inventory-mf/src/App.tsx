@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useStrings } from './i18n';
 
 interface InventoryItem {
   id: string;
@@ -11,7 +12,7 @@ interface InventoryItem {
 interface Option { id: string; label: string; }
 
 const API = '/api/inventory';
-const s = {
+const styles = {
   wrap:   { padding: '1.5rem' } as React.CSSProperties,
   h1:     { fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', marginBottom: '1.25rem' } as React.CSSProperties,
   table:  { width: '100%', borderCollapse: 'collapse' as const, background: '#fff', borderRadius: 10, overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,.07)' },
@@ -35,6 +36,7 @@ function nameById(options: Option[], id: string) {
 }
 
 export default function App() {
+  const s = useStrings();
   const [items, setItems]           = useState<InventoryItem[]>([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
@@ -169,15 +171,15 @@ export default function App() {
 
   async function handleConsume(e: React.FormEvent) {
     e.preventDefault();
-    if (selectedItems.length === 0) { alert('Select at least one item.'); return; }
+    if (selectedItems.length === 0) { alert(s.stock.consumeSelect); return; }
     for (const it of selectedItems) {
       const q = selected[it.id];
-      if (!q || q <= 0) { alert(`Quantity for "${nameById(products, it.productId)}" must be > 0.`); return; }
-      if (q > it.quantity) { alert(`Cannot consume ${q} of "${nameById(products, it.productId)}" — only ${it.quantity} available.`); return; }
+      if (!q || q <= 0) { alert(s.stock.consumeQtyGt0); return; }
+      if (q > it.quantity) { alert(s.stock.consumeQtyMax); return; }
     }
     if (proofFile) {
       const isPdf = proofFile.type === 'application/pdf' || proofFile.name.toLowerCase().endsWith('.pdf');
-      if (!isPdf) { alert('Proof must be a PDF.'); return; }
+      if (!isPdf) { alert(s.stock.proofMustPdf); return; }
     }
 
     setBusy(true);
@@ -205,7 +207,7 @@ export default function App() {
       setPurpose(''); setDescription(''); setProofFile(null);
       setDateOfUsage(new Date().toISOString().slice(0, 10));
       reload();
-      alert('Stock consumed and record saved.');
+      alert(s.stock.consumeSaved);
     } catch (e) { alert(String(e)); }
     finally { setBusy(false); }
   }
@@ -217,39 +219,39 @@ export default function App() {
   const selectedCount = selectedItems.length;
 
   return (
-    <div style={s.wrap}>
+    <div style={styles.wrap}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-        <h1 style={{ ...s.h1, marginBottom: 0 }}>Stock / Inventory</h1>
+        <h1 style={{ ...styles.h1, marginBottom: 0 }}>{s.stock.title}</h1>
         {lowStockCount > 0 && (
           <span style={{ background: '#fef2f2', color: '#dc2626', borderRadius: 999, padding: '0.2rem 0.7rem', fontSize: '0.8rem', fontWeight: 600 }}>
-            Low: {lowStockCount}
+            {s.stock.low}: {lowStockCount}
           </span>
         )}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <label style={{ fontSize: '0.85rem', color: '#475569' }}>Warehouse:</label>
-          <select style={{ ...s.input, width: 'auto', minWidth: 220 }} value={filterWh} onChange={e => setFilterWh(e.target.value)}>
-            <option value="">All warehouses</option>
+          <label style={{ fontSize: '0.85rem', color: '#475569' }}>{s.stock.warehouse}:</label>
+          <select style={{ ...styles.input, width: 'auto', minWidth: 220 }} value={filterWh} onChange={e => setFilterWh(e.target.value)}>
+            <option value="">{s.stock.allWarehouses}</option>
             {warehouses.map(w => <option key={w.id} value={w.id}>{w.label}</option>)}
           </select>
           <button
-            style={{ ...s.btn, background: selectedCount ? '#6d28d9' : '#c4b5fd', color: '#fff', cursor: selectedCount ? 'pointer' : 'not-allowed' }}
+            style={{ ...styles.btn, background: selectedCount ? '#6d28d9' : '#c4b5fd', color: '#fff', cursor: selectedCount ? 'pointer' : 'not-allowed' }}
             disabled={selectedCount === 0}
             onClick={() => setShowConsume(true)}
           >
-            Consume Stock{selectedCount ? ` (${selectedCount})` : ''}
+            {s.stock.consumeStock}{selectedCount ? ` (${selectedCount})` : ''}
           </button>
         </div>
       </div>
 
       {error && <p style={{ color: '#dc2626', marginBottom: '1rem' }}>{error}</p>}
-      {loading && <p style={{ color: '#64748b' }}>Loading…</p>}
+      {loading && <p style={{ color: '#64748b' }}>{s.common.loading}</p>}
 
       {!loading && !error && (
-        <table style={s.table}>
+        <table style={styles.table}>
           <thead>
             <tr>
-              <th style={{ ...s.th, width: 36 }}></th>
-              {['Product', 'Warehouse', 'Quantity', 'Min', 'Max', 'Actions'].map(h => <th key={h} style={s.th}>{h}</th>)}
+              <th style={{ ...styles.th, width: 36 }}></th>
+              {[s.stock.product, s.stock.warehouse, s.stock.quantity, s.stock.minQuantity, s.stock.maxQuantity, s.common.actions].map(h => <th key={h} style={styles.th}>{h}</th>)}
             </tr>
           </thead>
           <tbody>
@@ -261,23 +263,23 @@ export default function App() {
               const checked = selected[item.id] !== undefined;
               return (
                 <tr key={item.id} style={checked ? { background: '#f5f3ff' } : undefined}>
-                  <td style={s.td}>
+                  <td style={styles.td}>
                     <input type="checkbox" checked={checked} onChange={() => toggleSelect(item)} disabled={item.quantity <= 0} />
                   </td>
-                  <td style={s.td}>{nameById(products,   item.productId)}</td>
-                  <td style={s.td}>{nameById(warehouses, item.warehouseId)}</td>
-                  <td style={s.td}>
+                  <td style={styles.td}>{nameById(products,   item.productId)}</td>
+                  <td style={styles.td}>{nameById(warehouses, item.warehouseId)}</td>
+                  <td style={styles.td}>
                     <span style={{ fontWeight: 600, color: low ? '#dc2626' : high ? '#f59e0b' : '#16a34a' }}>{item.quantity}</span>
                   </td>
-                  <td style={s.td}>{min ?? '—'}</td>
-                  <td style={s.td}>{max ?? '—'}</td>
-                  <td style={s.td}>
-                    <button style={{ ...s.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => openEdit(item)}>Edit</button>
+                  <td style={styles.td}>{min ?? '—'}</td>
+                  <td style={styles.td}>{max ?? '—'}</td>
+                  <td style={styles.td}>
+                    <button style={{ ...styles.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => openEdit(item)}>{s.common.edit}</button>
                   </td>
                 </tr>
               );
             })}
-            {items.length === 0 && <tr><td colSpan={7} style={{ ...s.td, textAlign: 'center', color: '#94a3b8' }}>No inventory records.</td></tr>}
+            {items.length === 0 && <tr><td colSpan={7} style={{ ...styles.td, textAlign: 'center', color: '#94a3b8' }}>{s.stock.noItems}</td></tr>}
           </tbody>
         </table>
       )}
@@ -286,27 +288,27 @@ export default function App() {
       {editItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: 420, boxShadow: '0 8px 40px rgba(0,0,0,.15)' }}>
-            <h2 style={{ fontWeight: 700, marginBottom: '0.4rem', color: '#1e293b' }}>Edit thresholds</h2>
+            <h2 style={{ fontWeight: 700, marginBottom: '0.4rem', color: '#1e293b' }}>{s.stock.editThresholds}</h2>
             <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
-              {nameById(products, editItem.productId)} · {nameById(warehouses, editItem.warehouseId)} · current qty {editItem.quantity}
+              {nameById(products, editItem.productId)} · {nameById(warehouses, editItem.warehouseId)} · {s.stock.quantity}: {editItem.quantity}
             </p>
             <form onSubmit={saveThresholds}>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <div style={{ flex: 1, marginBottom: '0.5rem' }}>
-                  <label style={s.label}>Min threshold</label>
-                  <input style={s.input} type="number" min={0} placeholder="e.g. 10" value={editMin} onChange={e => setEditMin(e.target.value)} />
+                  <label style={styles.label}>{s.stock.minThreshold}</label>
+                  <input style={styles.input} type="number" min={0} placeholder="e.g. 10" value={editMin} onChange={e => setEditMin(e.target.value)} />
                 </div>
                 <div style={{ flex: 1, marginBottom: '0.5rem' }}>
-                  <label style={s.label}>Max threshold</label>
-                  <input style={s.input} type="number" min={0} placeholder="e.g. 500" value={editMax} onChange={e => setEditMax(e.target.value)} />
+                  <label style={styles.label}>{s.stock.maxThreshold}</label>
+                  <input style={styles.input} type="number" min={0} placeholder="e.g. 500" value={editMax} onChange={e => setEditMax(e.target.value)} />
                 </div>
               </div>
               <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '0 0 1.25rem' }}>
-                Stock below the Min threshold flags the item as “low” and triggers a low-stock notification. Leave blank to keep the current value.
+                {s.stock.thresholdHint}
               </p>
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                <button type="button" style={{ ...s.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setEditItem(null)}>Cancel</button>
-                <button type="submit" style={{ ...s.btn, background: '#3b82f6', color: '#fff' }}>Save</button>
+                <button type="button" style={{ ...styles.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setEditItem(null)}>{s.common.cancel}</button>
+                <button type="submit" style={{ ...styles.btn, background: '#3b82f6', color: '#fff' }}>{s.common.save}</button>
               </div>
             </form>
           </div>
@@ -317,25 +319,25 @@ export default function App() {
       {showConsume && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60 }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: 560, boxShadow: '0 8px 40px rgba(0,0,0,.15)', maxHeight: '90vh', overflow: 'auto' }}>
-            <h2 style={{ fontWeight: 700, marginBottom: '0.4rem', color: '#1e293b' }}>Consume Stock</h2>
+            <h2 style={{ fontWeight: 700, marginBottom: '0.4rem', color: '#1e293b' }}>{s.stock.consumeTitle}</h2>
             <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
-              Issue materials for internal use. Submitting reduces stock and saves a PDF consumption record.
+              {s.stock.consumeIntro}
             </p>
             <form onSubmit={handleConsume}>
               <div style={{ marginBottom: '1rem', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr>{['Product', 'Warehouse', 'Avail.', 'Consume'].map(h => <th key={h} style={{ ...s.th, fontSize: '0.7rem' }}>{h}</th>)}</tr>
+                    <tr>{[s.stock.product, s.stock.warehouse, s.stock.available_, s.stock.consume].map(h => <th key={h} style={{ ...styles.th, fontSize: '0.7rem' }}>{h}</th>)}</tr>
                   </thead>
                   <tbody>
                     {selectedItems.map(it => (
                       <tr key={it.id}>
-                        <td style={{ ...s.td, fontSize: '0.8rem' }}>{nameById(products, it.productId)}</td>
-                        <td style={{ ...s.td, fontSize: '0.8rem' }}>{nameById(warehouses, it.warehouseId)}</td>
-                        <td style={{ ...s.td, fontSize: '0.8rem' }}>{it.quantity}</td>
-                        <td style={{ ...s.td, width: 110 }}>
+                        <td style={{ ...styles.td, fontSize: '0.8rem' }}>{nameById(products, it.productId)}</td>
+                        <td style={{ ...styles.td, fontSize: '0.8rem' }}>{nameById(warehouses, it.warehouseId)}</td>
+                        <td style={{ ...styles.td, fontSize: '0.8rem' }}>{it.quantity}</td>
+                        <td style={{ ...styles.td, width: 110 }}>
                           <input
-                            style={{ ...s.input, padding: '0.3rem 0.5rem' }}
+                            style={{ ...styles.input, padding: '0.3rem 0.5rem' }}
                             type="number" min={1} max={it.quantity}
                             value={selected[it.id]}
                             onChange={e => setSelected(prev => ({ ...prev, [it.id]: Number(e.target.value) }))}
@@ -350,27 +352,27 @@ export default function App() {
 
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <div style={{ flex: 1, marginBottom: '0.875rem' }}>
-                  <label style={s.label}>Purpose</label>
-                  <input style={s.input} type="text" value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="e.g. Production line A" required />
+                  <label style={styles.label}>{s.stock.purpose}</label>
+                  <input style={styles.input} type="text" value={purpose} onChange={e => setPurpose(e.target.value)} required />
                 </div>
                 <div style={{ width: 170, marginBottom: '0.875rem' }}>
-                  <label style={s.label}>Date of usage</label>
-                  <input style={s.input} type="date" value={dateOfUsage} onChange={e => setDateOfUsage(e.target.value)} required />
+                  <label style={styles.label}>{s.stock.dateOfUsage}</label>
+                  <input style={styles.input} type="date" value={dateOfUsage} onChange={e => setDateOfUsage(e.target.value)} required />
                 </div>
               </div>
               <div style={{ marginBottom: '0.875rem' }}>
-                <label style={s.label}>Description</label>
-                <textarea style={{ ...s.input, minHeight: 70, resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} placeholder="What was used and why" />
+                <label style={styles.label}>{s.stock.description}</label>
+                <textarea style={{ ...styles.input, minHeight: 70, resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} />
               </div>
               <div style={{ marginBottom: '1.25rem' }}>
-                <label style={s.label}>Proof document (PDF, optional)</label>
+                <label style={styles.label}>{s.stock.proofDocument}</label>
                 <input type="file" accept="application/pdf,.pdf" onChange={e => setProofFile(e.target.files?.[0] ?? null)} style={{ fontSize: '0.9rem' }} />
                 {proofFile && <p style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#64748b' }}>{proofFile.name} · {(proofFile.size / 1024).toFixed(1)} KB</p>}
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                <button type="button" style={{ ...s.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setShowConsume(false)} disabled={busy}>Cancel</button>
-                <button type="submit" style={{ ...s.btn, background: '#6d28d9', color: '#fff' }} disabled={busy}>
-                  {busy ? 'Processing…' : 'Use Stock'}
+                <button type="button" style={{ ...styles.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setShowConsume(false)} disabled={busy}>{s.common.cancel}</button>
+                <button type="submit" style={{ ...styles.btn, background: '#6d28d9', color: '#fff' }} disabled={busy}>
+                  {busy ? s.stock.processing : s.stock.useStock}
                 </button>
               </div>
             </form>

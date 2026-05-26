@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useStrings } from './i18n';
 
 interface Driver  { id: string; name: string; phone: string; email: string; vehicleId: string; companyId: string; }
 interface Vehicle { id: string; registrationPlate: string; }
 interface Option  { id: string; label: string; }
 
-const s = {
+const styles = {
   wrap:  { padding: '1.5rem' } as React.CSSProperties,
   h1:    { fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', marginBottom: '1.25rem' } as React.CSSProperties,
   h2:    { fontSize: '1.1rem', fontWeight: 600, color: '#334155', margin: '1.75rem 0 0.75rem' } as React.CSSProperties,
@@ -48,6 +49,7 @@ const EMPTY_D: DriverForm  = { name: '', phone: '', email: '', vehicleId: '', co
 const EMPTY_V: VehicleForm = { registrationPlate: '' };
 
 export default function App() {
+  const s = useStrings();
   const [drivers, setDrivers]     = useState<Driver[]>([]);
   const [vehicles, setVehicles]   = useState<Vehicle[]>([]);
   const [companies, setCompanies] = useState<Option[]>([]);
@@ -85,7 +87,7 @@ export default function App() {
     e.preventDefault();
     const url = editD ? `/api/drivers/${editD.id}` : '/api/drivers';
     const r   = await fetch(url, { method: editD ? 'PUT' : 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dForm) });
-    if (!r.ok) { alert('Save failed'); return; }
+    if (!r.ok) { alert(s.common.saveFailed); return; }
     setShowD(false); void loadDrivers();
   }
 
@@ -93,119 +95,119 @@ export default function App() {
     e.preventDefault();
     const url = editV ? `/api/vehicles/${editV.id}` : '/api/vehicles';
     const r   = await fetch(url, { method: editV ? 'PUT' : 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(vForm) });
-    if (!r.ok) { alert('Save failed'); return; }
+    if (!r.ok) { alert(s.common.saveFailed); return; }
     setShowV(false); void loadVehicles();
   }
 
   async function deleteDriver(id: string) {
-    if (!confirm('Delete driver?')) return;
+    if (!confirm(s.fleet.deleteDriver)) return;
     await fetch(`/api/drivers/${id}`, { method: 'DELETE', credentials: 'include' });
     void loadDrivers();
   }
 
   async function deleteVehicle(id: string) {
-    if (!confirm('Delete vehicle?')) return;
+    if (!confirm(s.fleet.deleteVehicle)) return;
     await fetch(`/api/vehicles/${id}`, { method: 'DELETE', credentials: 'include' });
     void loadVehicles();
   }
 
   return (
-    <div style={s.wrap}>
-      <h1 style={s.h1}>Fleet Management</h1>
+    <div style={styles.wrap}>
+      <h1 style={styles.h1}>{s.fleet.title}</h1>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <h2 style={{ ...s.h2, margin: 0 }}>Drivers</h2>
-        <button style={{ ...s.btn, background: '#3b82f6', color: '#fff' }} onClick={() => { setEditD(null); setDForm(EMPTY_D); setShowD(true); }}>+ Add Driver</button>
+        <h2 style={{ ...styles.h2, margin: 0 }}>{s.fleet.drivers}</h2>
+        <button style={{ ...styles.btn, background: '#3b82f6', color: '#fff' }} onClick={() => { setEditD(null); setDForm(EMPTY_D); setShowD(true); }}>+ {s.fleet.newDriver}</button>
       </div>
-      {loadD ? <p style={{ color: '#64748b', marginTop: '0.5rem' }}>Loading…</p> : (
-        <table style={{ ...s.table, marginTop: '0.75rem' }}>
-          <thead><tr>{['Name','Phone','Email','Vehicle','Company','Actions'].map(h=><th key={h} style={s.th}>{h}</th>)}</tr></thead>
+      {loadD ? <p style={{ color: '#64748b', marginTop: '0.5rem' }}>{s.common.loading}</p> : (
+        <table style={{ ...styles.table, marginTop: '0.75rem' }}>
+          <thead><tr>{[s.fleet.name, s.fleet.phone, s.fleet.email, s.fleet.vehicle, s.fleet.company, s.common.actions].map(h=><th key={h} style={styles.th}>{h}</th>)}</tr></thead>
           <tbody>
             {drivers.map(d => (
               <tr key={d.id}>
-                <td style={s.td}>{d.name}</td><td style={s.td}>{d.phone}</td><td style={s.td}>{d.email}</td>
-                <td style={s.td}>{nameById(vehicleOptions, d.vehicleId)}</td>
-                <td style={s.td}>{nameById(companies, d.companyId)}</td>
-                <td style={s.td}>
-                  <button style={{ ...s.btn, background: '#e2e8f0', color: '#334155', marginRight: '0.5rem' }} onClick={() => { setEditD(d); setDForm({ name: d.name, phone: d.phone, email: d.email, vehicleId: d.vehicleId, companyId: d.companyId }); setShowD(true); }}>Edit</button>
-                  <button style={{ ...s.btn, background: '#fef2f2', color: '#dc2626' }} onClick={() => deleteDriver(d.id)}>Delete</button>
+                <td style={styles.td}>{d.name}</td><td style={styles.td}>{d.phone}</td><td style={styles.td}>{d.email}</td>
+                <td style={styles.td}>{nameById(vehicleOptions, d.vehicleId)}</td>
+                <td style={styles.td}>{nameById(companies, d.companyId)}</td>
+                <td style={styles.td}>
+                  <button style={{ ...styles.btn, background: '#e2e8f0', color: '#334155', marginRight: '0.5rem' }} onClick={() => { setEditD(d); setDForm({ name: d.name, phone: d.phone, email: d.email, vehicleId: d.vehicleId, companyId: d.companyId }); setShowD(true); }}>{s.common.edit}</button>
+                  <button style={{ ...styles.btn, background: '#fef2f2', color: '#dc2626' }} onClick={() => deleteDriver(d.id)}>{s.common.delete}</button>
                 </td>
               </tr>
             ))}
-            {drivers.length === 0 && <tr><td colSpan={6} style={{ ...s.td, textAlign: 'center', color: '#94a3b8' }}>No drivers found.</td></tr>}
+            {drivers.length === 0 && <tr><td colSpan={6} style={{ ...styles.td, textAlign: 'center', color: '#94a3b8' }}>{s.fleet.noDrivers}</td></tr>}
           </tbody>
         </table>
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.75rem' }}>
-        <h2 style={{ ...s.h2, margin: 0 }}>Vehicles</h2>
-        <button style={{ ...s.btn, background: '#3b82f6', color: '#fff' }} onClick={() => { setEditV(null); setVForm(EMPTY_V); setShowV(true); }}>+ Add Vehicle</button>
+        <h2 style={{ ...styles.h2, margin: 0 }}>{s.fleet.vehicles}</h2>
+        <button style={{ ...styles.btn, background: '#3b82f6', color: '#fff' }} onClick={() => { setEditV(null); setVForm(EMPTY_V); setShowV(true); }}>+ {s.fleet.newVehicle}</button>
       </div>
-      {loadV ? <p style={{ color: '#64748b', marginTop: '0.5rem' }}>Loading…</p> : (
-        <table style={{ ...s.table, marginTop: '0.75rem' }}>
-          <thead><tr>{['Registration Plate','Actions'].map(h=><th key={h} style={s.th}>{h}</th>)}</tr></thead>
+      {loadV ? <p style={{ color: '#64748b', marginTop: '0.5rem' }}>{s.common.loading}</p> : (
+        <table style={{ ...styles.table, marginTop: '0.75rem' }}>
+          <thead><tr>{[s.fleet.plateNumber, s.common.actions].map(h=><th key={h} style={styles.th}>{h}</th>)}</tr></thead>
           <tbody>
             {vehicles.map(v => (
               <tr key={v.id}>
-                <td style={s.td}>{v.registrationPlate}</td>
-                <td style={s.td}>
-                  <button style={{ ...s.btn, background: '#e2e8f0', color: '#334155', marginRight: '0.5rem' }} onClick={() => { setEditV(v); setVForm({ registrationPlate: v.registrationPlate }); setShowV(true); }}>Edit</button>
-                  <button style={{ ...s.btn, background: '#fef2f2', color: '#dc2626' }} onClick={() => deleteVehicle(v.id)}>Delete</button>
+                <td style={styles.td}>{v.registrationPlate}</td>
+                <td style={styles.td}>
+                  <button style={{ ...styles.btn, background: '#e2e8f0', color: '#334155', marginRight: '0.5rem' }} onClick={() => { setEditV(v); setVForm({ registrationPlate: v.registrationPlate }); setShowV(true); }}>{s.common.edit}</button>
+                  <button style={{ ...styles.btn, background: '#fef2f2', color: '#dc2626' }} onClick={() => deleteVehicle(v.id)}>{s.common.delete}</button>
                 </td>
               </tr>
             ))}
-            {vehicles.length === 0 && <tr><td colSpan={2} style={{ ...s.td, textAlign: 'center', color: '#94a3b8' }}>No vehicles found.</td></tr>}
+            {vehicles.length === 0 && <tr><td colSpan={2} style={{ ...styles.td, textAlign: 'center', color: '#94a3b8' }}>{s.fleet.noVehicles}</td></tr>}
           </tbody>
         </table>
       )}
 
       {showD && (
-        <Modal title={editD ? 'Edit Driver' : 'Add Driver'} onClose={() => setShowD(false)}>
+        <Modal title={editD ? s.fleet.editDriver : s.fleet.newDriver} onClose={() => setShowD(false)}>
           <form onSubmit={saveDriver}>
             <div style={{ marginBottom: '0.875rem' }}>
-              <label style={s.label}>Name</label>
-              <input style={s.input} type="text" value={dForm.name} onChange={e => setDForm(f => ({ ...f, name: e.target.value }))} required />
+              <label style={styles.label}>{s.fleet.name}</label>
+              <input style={styles.input} type="text" value={dForm.name} onChange={e => setDForm(f => ({ ...f, name: e.target.value }))} required />
             </div>
             <div style={{ marginBottom: '0.875rem' }}>
-              <label style={s.label}>Phone</label>
-              <input style={s.input} type="text" value={dForm.phone} onChange={e => setDForm(f => ({ ...f, phone: e.target.value }))} required />
+              <label style={styles.label}>{s.fleet.phone}</label>
+              <input style={styles.input} type="text" value={dForm.phone} onChange={e => setDForm(f => ({ ...f, phone: e.target.value }))} required />
             </div>
             <div style={{ marginBottom: '0.875rem' }}>
-              <label style={s.label}>Email</label>
-              <input style={s.input} type="email" value={dForm.email} onChange={e => setDForm(f => ({ ...f, email: e.target.value }))} required />
+              <label style={styles.label}>{s.fleet.email}</label>
+              <input style={styles.input} type="email" value={dForm.email} onChange={e => setDForm(f => ({ ...f, email: e.target.value }))} required />
             </div>
             <div style={{ marginBottom: '0.875rem' }}>
-              <label style={s.label}>Vehicle</label>
-              <select style={s.input} value={dForm.vehicleId} onChange={e => setDForm(f => ({ ...f, vehicleId: e.target.value }))} required>
-                <option value="">— select —</option>
+              <label style={styles.label}>{s.fleet.vehicle}</label>
+              <select style={styles.input} value={dForm.vehicleId} onChange={e => setDForm(f => ({ ...f, vehicleId: e.target.value }))} required>
+                <option value="">{s.common.selectPlaceholder}</option>
                 {vehicleOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
               </select>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
-              <label style={s.label}>Company</label>
-              <select style={s.input} value={dForm.companyId} onChange={e => setDForm(f => ({ ...f, companyId: e.target.value }))} required>
-                <option value="">— select —</option>
+              <label style={styles.label}>{s.fleet.company}</label>
+              <select style={styles.input} value={dForm.companyId} onChange={e => setDForm(f => ({ ...f, companyId: e.target.value }))} required>
+                <option value="">{s.common.selectPlaceholder}</option>
                 {companies.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
               </select>
             </div>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-              <button type="button" style={{ ...s.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setShowD(false)}>Cancel</button>
-              <button type="submit" style={{ ...s.btn, background: '#3b82f6', color: '#fff' }}>Save</button>
+              <button type="button" style={{ ...styles.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setShowD(false)}>{s.common.cancel}</button>
+              <button type="submit" style={{ ...styles.btn, background: '#3b82f6', color: '#fff' }}>{s.common.save}</button>
             </div>
           </form>
         </Modal>
       )}
 
       {showV && (
-        <Modal title={editV ? 'Edit Vehicle' : 'Add Vehicle'} onClose={() => setShowV(false)}>
+        <Modal title={editV ? s.fleet.editVehicle : s.fleet.newVehicle} onClose={() => setShowV(false)}>
           <form onSubmit={saveVehicle}>
             <div style={{ marginBottom: '1.25rem' }}>
-              <label style={s.label}>Registration Plate</label>
-              <input style={s.input} type="text" value={vForm.registrationPlate} onChange={e => setVForm({ registrationPlate: e.target.value })} required />
+              <label style={styles.label}>{s.fleet.plateNumber}</label>
+              <input style={styles.input} type="text" value={vForm.registrationPlate} onChange={e => setVForm({ registrationPlate: e.target.value })} required />
             </div>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-              <button type="button" style={{ ...s.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setShowV(false)}>Cancel</button>
-              <button type="submit" style={{ ...s.btn, background: '#3b82f6', color: '#fff' }}>Save</button>
+              <button type="button" style={{ ...styles.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setShowV(false)}>{s.common.cancel}</button>
+              <button type="submit" style={{ ...styles.btn, background: '#3b82f6', color: '#fff' }}>{s.common.save}</button>
             </div>
           </form>
         </Modal>

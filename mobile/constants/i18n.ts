@@ -1,197 +1,46 @@
-// All user-visible strings in Slovenian. One locale today — adding a second
-// locale is a one-file change: swap this object with a locale-keyed lookup.
-export const sl = {
-  // Auth
-  auth: {
-    login:              'Prijava',
-    register:           'Registracija',
-    logout:             'Odjava',
-    email:              'E-pošta',
-    password:           'Geslo',
-    name:               'Ime',
-    role:               'Vloga',
-    loginButton:        'Prijavi se',
-    registerButton:     'Registriraj se',
-    noAccount:          'Nimate računa? Registrirajte se.',
-    hasAccount:         'Že imate račun? Prijavite se.',
-    invalidCredentials: 'Napačna e-pošta ali geslo.',
-    sessionExpired:     'Seja je potekla. Prijavite se znova.',
-  },
-  // Tabs
-  tabs: {
-    home:          'Domov',
-    stock:         'Zaloga',
-    orders:        'Naročila',
-    notifications: 'Obvestila',
-    more:          'Več',
-  },
-  // Dashboard
-  dashboard: {
-    title:         'Nadzorna plošča',
-    warehouses:    'Skladišča',
-    orders:        'Naročila',
-    lowStock:      'Nizka zaloga',
-    recentAlerts:  'Zadnja opozorila',
-  },
-  // Warehouses
-  warehouses: {
-    title:        'Skladišča',
-    newWarehouse: 'Novo skladišče',
-    name:         'Ime',
-    country:      'Država',
-    city:         'Mesto',
-    capacity:     'Kapaciteta',
-    used:         'Zasedeno',
-    available:    'Prosto',
-    notFound:     'Skladišče ni najdeno.',
-  },
-  // Stock / Inventory
-  stock: {
-    title:       'Zaloga',
-    addStock:    'Dodaj zalogo',
-    product:     'Produkt',
-    warehouse:   'Skladišče',
-    quantity:    'Količina',
-    minQuantity: 'Min. zaloga',
-    maxQuantity: 'Maks. zaloga',
-    thresholdInvalid: 'Maks. mora biti večja ali enaka min.',
-    allWarehouses: 'Vsa skladišča',
-    noItems:     'Ni zalog.',
-    lowStock:    'Nizka zaloga',
-    outOfStock:  'Ni zaloge',
-  },
-  // Orders
-  orders: {
-    title:        'Naročila',
-    newOrder:     'Novo naročilo',
-    status:       'Status',
-    product:      'Produkt',
-    company:      'Podjetje',
-    warehouse:    'Skladišče',
-    driver:       'Voznik',
-    quantity:     'Količina',
-    deliveryDate: 'Datum dostave',
-    noOrders:     'Ni naročil.',
-    statuses: {
-      Requested:  'Zahtevano',
-      Approved:   'Odobreno',
-      Delivered:  'Dostavljeno',
-      Closed:     'Zaprto',
+// `sl` is a LIVE proxy that resolves each property access against the
+// currently-active locale's strings table (from @erp/i18n). The historical
+// name `sl` is preserved so existing call sites continue to work without a
+// refactor — they become automatically locale-reactive once the root layout
+// subscribes to the locale store (forcing a re-render on change).
+//
+// New code should prefer the `useStrings()` hook from '@/lib/i18n/locale'
+// for clarity. The proxy is a back-compat shim, not the canonical API.
+import { type Strings, getStrings } from '@erp/i18n';
+import { useLocaleStore } from '@/lib/i18n/locale';
+
+function currentTable(): Strings {
+  return getStrings(useLocaleStore.getState().locale);
+}
+
+function pathProxy(path: readonly string[]): unknown {
+  return new Proxy({} as object, {
+    get(_target, prop) {
+      if (typeof prop === 'symbol') return undefined;
+      let node: unknown = currentTable();
+      for (const segment of path) {
+        if (node && typeof node === 'object') {
+          node = (node as Record<string, unknown>)[segment];
+        }
+      }
+      if (!node || typeof node !== 'object') return undefined;
+      const value = (node as Record<string, unknown>)[prop];
+      if (value && typeof value === 'object') {
+        return pathProxy([...path, prop]);
+      }
+      return value;
     },
-    updateStatus: 'Posodobi status',
-  },
-  // Notifications
-  notifications: {
-    title:     'Obvestila',
-    markRead:  'Označi kot prebrano',
-    markAll:   'Označi vse',
-    noItems:   'Ni obvestil.',
-    liveOff:   'Obveščanje v živo ni na voljo.',
-    pollingFallback: 'Posodobitve vsakih 30 s',
-    liveOn:    'V živo',
-  },
-  // Products
-  products: {
-    title:       'Produkti',
-    newProduct:  'Nov produkt',
-    name:        'Ime',
-    sku:         'SKU',
-    description: 'Opis',
-    weight:      'Teža (kg)',
-    category:    'Kategorija',
-    noItems:     'Ni produktov.',
-  },
-  // Categories
-  categories: {
-    title:       'Kategorije',
-    newCategory: 'Nova kategorija',
-    noItems:     'Ni kategorij.',
-  },
-  // Fleet
-  fleet: {
-    title:       'Vozni park',
-    drivers:     'Vozniki',
-    vehicles:    'Vozila',
-    newDriver:   'Nov voznik',
-    newVehicle:  'Novo vozilo',
-    name:        'Ime',
-    phone:       'Telefon',
-    email:       'E-pošta',
-    vehicle:     'Vozilo',
-    company:     'Podjetje',
-    plateNumber: 'Registrska številka',
-    type:        'Tip',
-    noDrivers:   'Ni voznikov.',
-    noVehicles:  'Ni vozil.',
-    none:        'Brez',
-  },
-  // Companies
-  companies: {
-    title:      'Podjetja',
-    newCompany: 'Novo podjetje',
-    noItems:    'Ni podjetij.',
-    name:       'Ime',
-    email:      'E-pošta',
-    phone:      'Telefon',
-    contact:    'Kontaktna oseba',
-  },
-  // Scanner
-  scanner: {
-    title:         'Skener',
-    permissionBtn: 'Dovoli kamero',
-    permissionMsg: 'Za skeniranje črtnih kod je potreben dostop do kamere.',
-    scanning:      'Skeniranje...',
-    notFound:      'Produkt ni najden za ta SKU.',
-    pendingBackend:'Funkcija čaka na posodobitev strežnika.',
-    manualEntry:   'Ročni vnos SKU',
-  },
-  // AI
-  ai: {
-    title:        'AI Analiza',
-    unavailable:  'AI analiza trenutno ni na voljo.',
-    retry:        'Poskusi znova',
-    loading:      'Nalagam analizo...',
-    intro:        'AI analiza ponuja:',
-    bullet1:      'Povzetek stanja zalog po skladiščih',
-    bullet2:      'Opozorila o nizki zalogi',
-    bullet3:      'Predlog količin za ponovno naročilo',
-    acknowledge:  'Zaženi analizo',
-    refresh:      'Osveži',
-    sourceAzure:  'Vir: Azure AI',
-    sourceLocal:  'Vir: lokalna analiza (Azure ni nastavljen)',
-    totals:       'Pregled',
-    products:     'Produkti',
-    warehouses:   'Skladišča',
-    totalStock:   'Skupna zaloga',
-    lowStock:     'Nizka zaloga',
-    alerts:       'Opozorila',
-    reorder:      'Predlog naročila',
-    suggestedQty: 'Predlagano kosov',
-  },
-  // Profile
-  profile: {
-    title:  'Profil',
-    logout: 'Odjava',
-    role:   'Vloga',
-  },
-  // Common
-  common: {
-    save:    'Shrani',
-    cancel:  'Prekliči',
-    delete:  'Izbriši',
-    edit:    'Uredi',
-    loading: 'Nalaganje...',
-    error:   'Prišlo je do napake.',
-    retry:   'Poskusi znova',
-    offline: 'Brez povezave',
-    offlineMsg: 'Spremembe niso možne brez internetne povezave.',
-    noInternet: 'Ni internetne povezave. Prikazujem shranjene podatke.',
-  },
-  // Roles (user-visible labels)
-  roles: {
-    ADMIN:   'Administrator',
-    MANAGER: 'Vodja',
-    WORKER:  'Skladiščni delavec',
-    DRIVER:  'Voznik',
-  },
-} as const;
+    has(_target, prop) {
+      if (typeof prop === 'symbol') return false;
+      let node: unknown = currentTable();
+      for (const segment of path) {
+        if (node && typeof node === 'object') {
+          node = (node as Record<string, unknown>)[segment];
+        }
+      }
+      return !!node && typeof node === 'object' && prop in (node as object);
+    },
+  });
+}
+
+export const sl: Strings = pathProxy([]) as Strings;

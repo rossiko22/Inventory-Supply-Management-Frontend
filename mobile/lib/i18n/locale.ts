@@ -1,36 +1,22 @@
-// Locale scaffolding.
+// Locale store + helpers — reads message tables from @erp/i18n.
 //
-// Today the app ships one locale (Slovenian). The structure here exists so
-// adding a second locale (EN, HR, …) is a one-file change:
-//   1. Add `en: enStrings` to `MESSAGES` below.
-//   2. Add 'en' to the `Locale` union.
-// Nothing else has to move. Components that import `sl` directly keep working;
-// new code should prefer `useStrings()` so it automatically follows the
-// active locale.
+// Components subscribe via `useStrings()` (React hook) or read directly via
+// the live `sl` proxy in @/constants/i18n which dynamically resolves to the
+// current locale's table. The root `_layout.tsx` subscribes to the store so
+// the entire tree re-renders on language change.
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { sl } from '@/constants/i18n';
+import {
+  type Locale,
+  type Strings,
+  DEFAULT_LOCALE,
+  getStrings,
+} from '@erp/i18n';
 
-export type Locale = 'sl';
-export type Strings = typeof sl;
+export type { Locale, Strings };
+export { DEFAULT_LOCALE, getStrings };
 
-const MESSAGES: Record<Locale, Strings> = {
-  sl,
-};
-
-export const DEFAULT_LOCALE: Locale = 'sl';
-
-// Returns the strings table for an explicit locale. Falls back to default
-// if the locale isn't shipped.
-export function getStrings(locale: Locale = DEFAULT_LOCALE): Strings {
-  return MESSAGES[locale] ?? MESSAGES[DEFAULT_LOCALE];
-}
-
-// Lightweight locale store. To wire device-locale detection later:
-//   import * as Localization from 'expo-localization';
-//   const device = Localization.getLocales()[0]?.languageCode as Locale | undefined;
-//   useLocaleStore.getState().setLocale(device ?? DEFAULT_LOCALE);
 interface LocaleState {
   locale: Locale;
   setLocale: (locale: Locale) => void;
@@ -49,14 +35,14 @@ export const useLocaleStore = create<LocaleState>()(
   ),
 );
 
-// React hook — returns the strings table for the active locale.
-// Components: `const t = useStrings(); t.common.save`
+// React hook — returns the strings table for the active locale and subscribes
+// the component to locale changes.
 export function useStrings(): Strings {
   const locale = useLocaleStore((s) => s.locale);
   return getStrings(locale);
 }
 
-// Standalone helper — for non-React code (axios formatters, queue workers, …).
+// Standalone helper — for non-React code (axios formatters, queue workers).
 export function getActiveStrings(): Strings {
   return getStrings(useLocaleStore.getState().locale);
 }

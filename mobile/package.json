@@ -13,10 +13,12 @@
   },
   "jest": {
     "preset": "jest-expo",
+    "setupFiles": ["./jest.setup.js"],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/$1",
       "^@erp/domain$": "<rootDir>/../packages/domain/src/index.ts",
-      "^@erp/api-types$": "<rootDir>/../packages/api-types/src/index.ts"
+      "^@erp/api-types$": "<rootDir>/../packages/api-types/src/index.ts",
+      "^@erp/i18n$": "<rootDir>/../packages/i18n/src/index.ts"
     },
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|react-navigation|@react-navigation/.*|zustand|@tanstack/.*)"

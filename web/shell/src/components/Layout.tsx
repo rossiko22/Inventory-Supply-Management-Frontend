@@ -2,15 +2,8 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthUser } from '../auth';
 import NotificationsPanel from './NotificationsPanel';
-
-const NAV = [
-  { path: '/warehouses', label: 'Warehouses',  icon: '🏭' },
-  { path: '/inventory',  label: 'Stock',        icon: '📦' },
-  { path: '/orders',     label: 'Orders',       icon: '📋' },
-  { path: '/companies',  label: 'Companies',    icon: '🏢' },
-  { path: '/fleet',      label: 'Fleet',        icon: '🚚' },
-  { path: '/products',   label: 'Products',     icon: '🛍️' },
-];
+import { useStrings, useLocale, setLocale } from '../i18n';
+import { LOCALES, LOCALE_LABEL, type Locale } from '@erp/i18n';
 
 interface Props {
   user: AuthUser;
@@ -20,7 +13,17 @@ interface Props {
 
 export default function Layout({ user, onLogout, children }: Props) {
   const { pathname } = useLocation();
-  const current = NAV.find(n => pathname.startsWith(n.path))?.label ?? 'Dashboard';
+  const s = useStrings();
+  const locale = useLocale();
+  const NAV = [
+    { path: '/warehouses', label: s.warehouses.title, icon: '🏭' },
+    { path: '/inventory',  label: s.stock.title,      icon: '📦' },
+    { path: '/orders',     label: s.orders.title,     icon: '📋' },
+    { path: '/companies',  label: s.companies.title,  icon: '🏢' },
+    { path: '/fleet',      label: s.fleet.title,      icon: '🚚' },
+    { path: '/products',   label: s.products.title,   icon: '🛍️' },
+  ];
+  const current = NAV.find(n => pathname.startsWith(n.path))?.label ?? s.dashboard.title;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -69,10 +72,36 @@ export default function Layout({ user, onLogout, children }: Props) {
           })}
         </nav>
 
+        <div style={{ margin: '1rem 1.25rem 0', display: 'flex', gap: '0.25rem' }}>
+          {LOCALES.map((l: Locale) => {
+            const active = l === locale;
+            return (
+              <button
+                key={l}
+                onClick={() => setLocale(l)}
+                title={LOCALE_LABEL[l]}
+                style={{
+                  flex: 1,
+                  padding: '0.4rem 0.25rem',
+                  background: active ? '#3b82f6' : '#334155',
+                  color: '#f8fafc',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  fontWeight: active ? 700 : 400,
+                  textTransform: 'uppercase',
+                }}
+              >
+                {l}
+              </button>
+            );
+          })}
+        </div>
         <button
           onClick={onLogout}
           style={{
-            margin: '1rem 1.25rem 0',
+            margin: '0.5rem 1.25rem 0',
             padding: '0.5rem',
             background: '#334155',
             color: '#f8fafc',
@@ -82,7 +111,7 @@ export default function Layout({ user, onLogout, children }: Props) {
             fontSize: '0.875rem',
           }}
         >
-          Logout
+          {s.auth.logout}
         </button>
       </aside>
 

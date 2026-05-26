@@ -5,15 +5,19 @@ import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/lib/api/auth';
 import { sl } from '@/constants/i18n';
+import { useLocaleStore } from '@/lib/i18n/locale';
+import { LOCALES, LOCALE_LABEL, type Locale } from '@erp/i18n';
 
 export default function ProfileScreen(): React.ReactElement {
   const router = useRouter();
-  const user   = useAuthStore((s) => s.user);
-  const role   = useAuthStore((s) => s.role);
-  const clear  = useAuthStore((s) => s.clear);
+  const user      = useAuthStore((s) => s.user);
+  const role      = useAuthStore((s) => s.role);
+  const clear     = useAuthStore((s) => s.clear);
+  const locale    = useLocaleStore((s) => s.locale);
+  const setLocale = useLocaleStore((s) => s.setLocale);
 
   const handleLogout = () => {
-    Alert.alert(sl.auth.logout, 'Ste prepričani?', [
+    Alert.alert(sl.auth.logout, sl.profile.confirmLogout, [
       { text: sl.common.cancel, style: 'cancel' },
       {
         text: sl.auth.logout,
@@ -49,6 +53,26 @@ export default function ProfileScreen(): React.ReactElement {
           </View>
         </View>
 
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>{sl.profile.language}</Text>
+          <View style={styles.langRow}>
+            {LOCALES.map((l: Locale) => {
+              const active = l === locale;
+              return (
+                <TouchableOpacity
+                  key={l}
+                  style={[styles.langChip, active && styles.langChipActive]}
+                  onPress={() => setLocale(l)}
+                >
+                  <Text style={[styles.langChipText, active && styles.langChipTextActive]}>
+                    {LOCALE_LABEL[l]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Text style={styles.logoutText}>{sl.auth.logout}</Text>
         </TouchableOpacity>
@@ -72,4 +96,11 @@ const styles = StyleSheet.create({
   roleText:   { color: '#3b82f6', fontWeight: '600', fontSize: 13 },
   logoutBtn:  { width: '100%', backgroundColor: '#fee2e2', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   logoutText: { color: '#ef4444', fontWeight: '700', fontSize: 15 },
+  section:    { width: '100%', backgroundColor: '#fff', borderRadius: 14, padding: 16, gap: 10 },
+  sectionLabel: { fontSize: 13, fontWeight: '600', color: '#475569' },
+  langRow:    { flexDirection: 'row', gap: 8 },
+  langChip:   { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#f1f5f9', alignItems: 'center' },
+  langChipActive: { backgroundColor: '#dbeafe', borderColor: '#3b82f6' },
+  langChipText:   { fontSize: 13, color: '#475569' },
+  langChipTextActive: { color: '#3b82f6', fontWeight: '700' },
 });

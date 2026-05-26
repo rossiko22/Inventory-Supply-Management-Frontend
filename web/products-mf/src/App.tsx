@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useStrings } from './i18n';
 
 interface Product  { id: string; name: string; sku: string; description: string; weight: number; categoryId: string; }
 interface Category { id: string; name: string; description: string | null; }
 type ProductForm  = Omit<Product, 'id'>;
 type CategoryForm = Omit<Category, 'id'>;
 
-const s = {
+const styles = {
   wrap:  { padding: '1.5rem' } as React.CSSProperties,
   h1:    { fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', marginBottom: '1.25rem' } as React.CSSProperties,
   h2:    { fontSize: '1.1rem', fontWeight: 600, color: '#334155' } as React.CSSProperties,
@@ -20,6 +21,7 @@ const EMPTY_P: ProductForm  = { name: '', sku: '', description: '', weight: 0, c
 const EMPTY_C: CategoryForm = { name: '', description: '' };
 
 export default function App() {
+  const s = useStrings();
   const [products,   setProducts]   = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadP, setLoadP]           = useState(true);
@@ -55,7 +57,7 @@ export default function App() {
     e.preventDefault();
     const url = editP ? `/api/products/${editP.id}` : '/api/products';
     const r   = await fetch(url, { method: editP ? 'PUT' : 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pForm) });
-    if (!r.ok) { alert('Save failed'); return; }
+    if (!r.ok) { alert(s.common.saveFailed); return; }
     setShowP(false); void loadProducts();
   }
 
@@ -63,20 +65,20 @@ export default function App() {
     e.preventDefault();
     const url = editC ? `/api/categories/${editC.id}` : '/api/categories';
     const r = await fetch(url, { method: editC ? 'PUT' : 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cForm) });
-    if (!r.ok) { alert('Save failed'); return; }
+    if (!r.ok) { alert(s.common.saveFailed); return; }
     setShowC(false); void loadCategories();
   }
 
   async function deleteProduct(id: string) {
-    if (!confirm('Delete product?')) return;
+    if (!confirm(s.products.deleteConfirm)) return;
     await fetch(`/api/products/${id}`, { method: 'DELETE', credentials: 'include' });
     void loadProducts();
   }
 
   async function deleteCategory(id: string) {
-    if (!confirm('Delete category?')) return;
+    if (!confirm(s.categories.deleteConfirm)) return;
     const r = await fetch(`/api/categories/${id}`, { method: 'DELETE', credentials: 'include' });
-    if (!r.ok && r.status !== 204) { alert('Delete failed'); return; }
+    if (!r.ok && r.status !== 204) { alert(s.common.deleteFailed); return; }
     void loadCategories();
   }
 
@@ -86,8 +88,8 @@ export default function App() {
     if (!skuQuery.trim()) return;
     try {
       const r = await fetch(`/api/products/by-sku?sku=${encodeURIComponent(skuQuery.trim())}`, { credentials: 'include' });
-      if (r.status === 404) { setSkuError(`No product with SKU "${skuQuery}".`); return; }
-      if (!r.ok) { setSkuError('Search failed'); return; }
+      if (r.status === 404) { setSkuError(`${s.products.noMatchSku} "${skuQuery}".`); return; }
+      if (!r.ok) { setSkuError(s.products.searchFailed); return; }
       setSkuResult(await r.json() as Product);
     } catch (e) { setSkuError(String(e)); }
   }
@@ -103,62 +105,62 @@ export default function App() {
   const visibleProducts = filterCat ? products.filter(p => p.categoryId === filterCat) : products;
 
   return (
-    <div style={s.wrap}>
-      <h1 style={s.h1}>Products & Categories</h1>
+    <div style={styles.wrap}>
+      <h1 style={styles.h1}>{s.products.productsAndCategories}</h1>
 
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
-        <button style={tabBtn(tab === 'products')}   onClick={() => setTab('products')}>Products</button>
-        <button style={tabBtn(tab === 'categories')} onClick={() => setTab('categories')}>Categories</button>
+        <button style={tabBtn(tab === 'products')}   onClick={() => setTab('products')}>{s.products.title}</button>
+        <button style={tabBtn(tab === 'categories')} onClick={() => setTab('categories')}>{s.categories.title}</button>
       </div>
 
       {tab === 'products' && (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-            <h2 style={s.h2}>Products</h2>
+            <h2 style={styles.h2}>{s.products.title}</h2>
             <form onSubmit={searchSku} style={{ display: 'flex', gap: '0.5rem' }}>
               <input
-                style={{ ...s.input, width: 220 }}
-                placeholder="Search by SKU…"
+                style={{ ...styles.input, width: 220 }}
+                placeholder={s.products.skuPlaceholder}
                 value={skuQuery}
                 onChange={e => setSkuQuery(e.target.value)}
               />
-              <button type="submit" style={{ ...s.btn, background: '#6366f1', color: '#fff' }}>Find</button>
+              <button type="submit" style={{ ...styles.btn, background: '#6366f1', color: '#fff' }}>{s.products.find}</button>
               {(skuResult || skuError) && (
-                <button type="button" style={{ ...s.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => { setSkuQuery(''); setSkuResult(null); setSkuError(''); }}>Clear</button>
+                <button type="button" style={{ ...styles.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => { setSkuQuery(''); setSkuResult(null); setSkuError(''); }}>{s.products.clear}</button>
               )}
             </form>
-            <select style={{ ...s.input, width: 200 }} value={filterCat} onChange={e => setFilterCat(e.target.value)}>
-              <option value="">All categories</option>
+            <select style={{ ...styles.input, width: 200 }} value={filterCat} onChange={e => setFilterCat(e.target.value)}>
+              <option value="">{s.products.allCategories}</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
-            <button style={{ ...s.btn, background: '#3b82f6', color: '#fff', marginLeft: 'auto' }} onClick={() => { setEditP(null); setPForm(EMPTY_P); setShowP(true); }}>+ New Product</button>
+            <button style={{ ...styles.btn, background: '#3b82f6', color: '#fff', marginLeft: 'auto' }} onClick={() => { setEditP(null); setPForm(EMPTY_P); setShowP(true); }}>+ {s.products.newProduct}</button>
           </div>
 
           {skuError && <p style={{ color: '#dc2626', marginBottom: '0.75rem', fontSize: '0.875rem' }}>{skuError}</p>}
           {skuResult && (
             <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 8, padding: '0.75rem 1rem', marginBottom: '0.75rem', fontSize: '0.875rem' }}>
-              Match: <strong>{skuResult.name}</strong> · SKU <code>{skuResult.sku}</code> · {catName(skuResult.categoryId)} · {skuResult.weight} kg
+              {s.products.match}: <strong>{skuResult.name}</strong> · {s.products.sku} <code>{skuResult.sku}</code> · {catName(skuResult.categoryId)} · {skuResult.weight} kg
             </div>
           )}
 
-          {loadP ? <p style={{ color: '#64748b' }}>Loading…</p> : (
-            <table style={s.table}>
-              <thead><tr>{['Name','SKU','Category','Weight','Desc','Actions'].map(h=><th key={h} style={s.th}>{h}</th>)}</tr></thead>
+          {loadP ? <p style={{ color: '#64748b' }}>{s.common.loading}</p> : (
+            <table style={styles.table}>
+              <thead><tr>{[s.products.name, s.products.sku, s.products.category, s.products.weight, s.products.description, s.common.actions].map(h=><th key={h} style={styles.th}>{h}</th>)}</tr></thead>
               <tbody>
                 {visibleProducts.map(p => (
                   <tr key={p.id}>
-                    <td style={s.td}>{p.name}</td>
-                    <td style={s.td}><code style={{ fontSize: '0.8rem' }}>{p.sku}</code></td>
-                    <td style={s.td}>{catName(p.categoryId)}</td>
-                    <td style={s.td}>{p.weight} kg</td>
-                    <td style={s.td} title={p.description}>{p.description.slice(0, 30)}{p.description.length > 30 ? '…' : ''}</td>
-                    <td style={s.td}>
-                      <button style={{ ...s.btn, background: '#e2e8f0', color: '#334155', marginRight: '0.5rem' }} onClick={() => { setEditP(p); setPForm({ name: p.name, sku: p.sku, description: p.description, weight: p.weight, categoryId: p.categoryId }); setShowP(true); }}>Edit</button>
-                      <button style={{ ...s.btn, background: '#fef2f2', color: '#dc2626' }} onClick={() => deleteProduct(p.id)}>Delete</button>
+                    <td style={styles.td}>{p.name}</td>
+                    <td style={styles.td}><code style={{ fontSize: '0.8rem' }}>{p.sku}</code></td>
+                    <td style={styles.td}>{catName(p.categoryId)}</td>
+                    <td style={styles.td}>{p.weight} kg</td>
+                    <td style={styles.td} title={p.description}>{p.description.slice(0, 30)}{p.description.length > 30 ? '…' : ''}</td>
+                    <td style={styles.td}>
+                      <button style={{ ...styles.btn, background: '#e2e8f0', color: '#334155', marginRight: '0.5rem' }} onClick={() => { setEditP(p); setPForm({ name: p.name, sku: p.sku, description: p.description, weight: p.weight, categoryId: p.categoryId }); setShowP(true); }}>{s.common.edit}</button>
+                      <button style={{ ...styles.btn, background: '#fef2f2', color: '#dc2626' }} onClick={() => deleteProduct(p.id)}>{s.common.delete}</button>
                     </td>
                   </tr>
                 ))}
-                {visibleProducts.length === 0 && <tr><td colSpan={6} style={{ ...s.td, textAlign: 'center', color: '#94a3b8' }}>No products found.</td></tr>}
+                {visibleProducts.length === 0 && <tr><td colSpan={6} style={{ ...styles.td, textAlign: 'center', color: '#94a3b8' }}>{s.products.noItems}</td></tr>}
               </tbody>
             </table>
           )}
@@ -168,24 +170,24 @@ export default function App() {
       {tab === 'categories' && (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-            <h2 style={s.h2}>Categories</h2>
-            <button style={{ ...s.btn, background: '#3b82f6', color: '#fff' }} onClick={() => { setEditC(null); setCForm(EMPTY_C); setShowC(true); }}>+ New Category</button>
+            <h2 style={styles.h2}>{s.categories.title}</h2>
+            <button style={{ ...styles.btn, background: '#3b82f6', color: '#fff' }} onClick={() => { setEditC(null); setCForm(EMPTY_C); setShowC(true); }}>+ {s.categories.newCategory}</button>
           </div>
-          {loadC ? <p style={{ color: '#64748b' }}>Loading…</p> : (
-            <table style={s.table}>
-              <thead><tr>{['Name','Description','Actions'].map(h=><th key={h} style={s.th}>{h}</th>)}</tr></thead>
+          {loadC ? <p style={{ color: '#64748b' }}>{s.common.loading}</p> : (
+            <table style={styles.table}>
+              <thead><tr>{[s.categories.name, s.categories.description, s.common.actions].map(h=><th key={h} style={styles.th}>{h}</th>)}</tr></thead>
               <tbody>
                 {categories.map(c => (
                   <tr key={c.id}>
-                    <td style={s.td}>{c.name}</td>
-                    <td style={s.td}>{c.description ?? '—'}</td>
-                    <td style={s.td}>
-                      <button style={{ ...s.btn, background: '#e2e8f0', color: '#334155', marginRight: '0.5rem' }} onClick={() => { setEditC(c); setCForm({ name: c.name, description: c.description ?? '' }); setShowC(true); }}>Edit</button>
-                      <button style={{ ...s.btn, background: '#fef2f2', color: '#dc2626' }} onClick={() => deleteCategory(c.id)}>Delete</button>
+                    <td style={styles.td}>{c.name}</td>
+                    <td style={styles.td}>{c.description ?? '—'}</td>
+                    <td style={styles.td}>
+                      <button style={{ ...styles.btn, background: '#e2e8f0', color: '#334155', marginRight: '0.5rem' }} onClick={() => { setEditC(c); setCForm({ name: c.name, description: c.description ?? '' }); setShowC(true); }}>{s.common.edit}</button>
+                      <button style={{ ...styles.btn, background: '#fef2f2', color: '#dc2626' }} onClick={() => deleteCategory(c.id)}>{s.common.delete}</button>
                     </td>
                   </tr>
                 ))}
-                {categories.length === 0 && <tr><td colSpan={3} style={{ ...s.td, textAlign: 'center', color: '#94a3b8' }}>No categories found.</td></tr>}
+                {categories.length === 0 && <tr><td colSpan={3} style={{ ...styles.td, textAlign: 'center', color: '#94a3b8' }}>{s.categories.noItems}</td></tr>}
               </tbody>
             </table>
           )}
@@ -195,28 +197,28 @@ export default function App() {
       {showP && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: 460, boxShadow: '0 8px 40px rgba(0,0,0,.15)', maxHeight: '90vh', overflow: 'auto' }}>
-            <h2 style={{ fontWeight: 700, marginBottom: '1.25rem', color: '#1e293b' }}>{editP ? 'Edit Product' : 'New Product'}</h2>
+            <h2 style={{ fontWeight: 700, marginBottom: '1.25rem', color: '#1e293b' }}>{editP ? s.products.editProduct : s.products.newProduct}</h2>
             <form onSubmit={saveProduct}>
-              {(['name','sku','description'] as (keyof ProductForm)[]).map(k => (
+              {([['name', s.products.name], ['sku', s.products.sku], ['description', s.products.description]] as [keyof ProductForm, string][]).map(([k, lbl]) => (
                 <div key={k} style={{ marginBottom: '0.875rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#475569', marginBottom: '0.25rem' }}>{k}</label>
-                  <input style={s.input} type="text" value={pForm[k] as string} onChange={e => setPForm(f => ({ ...f, [k]: e.target.value }))} required={k !== 'description'} />
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#475569', marginBottom: '0.25rem' }}>{lbl}</label>
+                  <input style={styles.input} type="text" value={pForm[k] as string} onChange={e => setPForm(f => ({ ...f, [k]: e.target.value }))} required={k !== 'description'} />
                 </div>
               ))}
               <div style={{ marginBottom: '0.875rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#475569', marginBottom: '0.25rem' }}>Weight (kg)</label>
-                <input style={s.input} type="number" step="0.01" min={0} value={pForm.weight} onChange={e => setPForm(f => ({ ...f, weight: +e.target.value }))} required />
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#475569', marginBottom: '0.25rem' }}>{s.products.weight}</label>
+                <input style={styles.input} type="number" step="0.01" min={0} value={pForm.weight} onChange={e => setPForm(f => ({ ...f, weight: +e.target.value }))} required />
               </div>
               <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#475569', marginBottom: '0.25rem' }}>Category</label>
-                <select style={s.input} value={pForm.categoryId} onChange={e => setPForm(f => ({ ...f, categoryId: e.target.value }))} required>
-                  <option value="">Select category…</option>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#475569', marginBottom: '0.25rem' }}>{s.products.category}</label>
+                <select style={styles.input} value={pForm.categoryId} onChange={e => setPForm(f => ({ ...f, categoryId: e.target.value }))} required>
+                  <option value="">{s.products.selectCategory}</option>
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                <button type="button" style={{ ...s.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setShowP(false)}>Cancel</button>
-                <button type="submit" style={{ ...s.btn, background: '#3b82f6', color: '#fff' }}>Save</button>
+                <button type="button" style={{ ...styles.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setShowP(false)}>{s.common.cancel}</button>
+                <button type="submit" style={{ ...styles.btn, background: '#3b82f6', color: '#fff' }}>{s.common.save}</button>
               </div>
             </form>
           </div>
@@ -226,19 +228,19 @@ export default function App() {
       {showC && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: 420, boxShadow: '0 8px 40px rgba(0,0,0,.15)' }}>
-            <h2 style={{ fontWeight: 700, marginBottom: '1.25rem', color: '#1e293b' }}>{editC ? 'Edit Category' : 'New Category'}</h2>
+            <h2 style={{ fontWeight: 700, marginBottom: '1.25rem', color: '#1e293b' }}>{editC ? s.categories.editCategory : s.categories.newCategory}</h2>
             <form onSubmit={saveCategory}>
               <div style={{ marginBottom: '0.875rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#475569', marginBottom: '0.25rem' }}>Name</label>
-                <input style={s.input} type="text" value={cForm.name} onChange={e => setCForm(f => ({ ...f, name: e.target.value }))} required />
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#475569', marginBottom: '0.25rem' }}>{s.categories.name}</label>
+                <input style={styles.input} type="text" value={cForm.name} onChange={e => setCForm(f => ({ ...f, name: e.target.value }))} required />
               </div>
               <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#475569', marginBottom: '0.25rem' }}>Description</label>
-                <input style={s.input} type="text" value={cForm.description ?? ''} onChange={e => setCForm(f => ({ ...f, description: e.target.value }))} />
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#475569', marginBottom: '0.25rem' }}>{s.categories.description}</label>
+                <input style={styles.input} type="text" value={cForm.description ?? ''} onChange={e => setCForm(f => ({ ...f, description: e.target.value }))} />
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                <button type="button" style={{ ...s.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setShowC(false)}>Cancel</button>
-                <button type="submit" style={{ ...s.btn, background: '#3b82f6', color: '#fff' }}>Save</button>
+                <button type="button" style={{ ...styles.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setShowC(false)}>{s.common.cancel}</button>
+                <button type="submit" style={{ ...styles.btn, background: '#3b82f6', color: '#fff' }}>{s.common.save}</button>
               </div>
             </form>
           </div>

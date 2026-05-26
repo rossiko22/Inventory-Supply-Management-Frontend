@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { getUser, clearUser, AuthUser } from './auth';
 import Layout from './components/Layout';
+import { useStrings } from './i18n';
 
 // Lazy-load each remote micro-frontend
 const AuthApp        = lazy(() => import('authMf/App'));
@@ -13,11 +14,17 @@ const FleetApp       = lazy(() => import('fleetMf/App'));
 const ProductsApp    = lazy(() => import('productsMf/App'));
 
 function Loading() {
+  const s = useStrings();
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-      <p style={{ color: '#64748b', fontSize: '1rem' }}>Loading module…</p>
+      <p style={{ color: '#64748b', fontSize: '1rem' }}>{s.common.loading}</p>
     </div>
   );
+}
+
+function NotFound() {
+  const s = useStrings();
+  return <p style={{ padding: '2rem' }}>{s.common.error}</p>;
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -77,7 +84,7 @@ export default function App() {
                   <Route path="/companies"   element={<CompaniesApp />} />
                   <Route path="/fleet"       element={<FleetApp />} />
                   <Route path="/products"    element={<ProductsApp />} />
-                  <Route path="*"            element={<p style={{ padding: '2rem' }}>Page not found.</p>} />
+                  <Route path="*"            element={<NotFound />} />
                 </Routes>
               </Suspense>
             </Layout>

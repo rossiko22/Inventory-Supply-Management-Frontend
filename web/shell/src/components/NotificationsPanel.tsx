@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AppNotification, useNotifications } from '../notifications';
+import { useStrings } from '../i18n';
 
 const SEVERITY_COLOR: Record<AppNotification['severity'], string> = {
   info:    '#3b82f6',
@@ -17,6 +18,7 @@ const CATEGORY_ICON: Record<AppNotification['category'], string> = {
 export default function NotificationsPanel() {
   const { items, unreadCount, markRead, markAllRead } = useNotifications();
   const [open, setOpen] = useState(false);
+  const s = useStrings();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,7 +74,7 @@ export default function NotificationsPanel() {
             padding: '0.75rem 1rem', borderBottom: '1px solid #e2e8f0',
             position: 'sticky', top: 0, background: '#fff', zIndex: 1,
           }}>
-            <strong style={{ fontSize: '0.95rem' }}>Notifications</strong>
+            <strong style={{ fontSize: '0.95rem' }}>{s.notifications.title}</strong>
             <button
               onClick={() => void markAllRead()}
               disabled={unreadCount === 0}
@@ -85,13 +87,13 @@ export default function NotificationsPanel() {
                 fontWeight: 500,
               }}
             >
-              Mark all read
+              {s.notifications.markAll}
             </button>
           </div>
 
           {items.length === 0 ? (
             <p style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.875rem', margin: 0 }}>
-              No notifications.
+              {s.notifications.noItems}
             </p>
           ) : (
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
