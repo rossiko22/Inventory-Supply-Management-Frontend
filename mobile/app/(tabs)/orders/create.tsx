@@ -23,11 +23,12 @@ export default function CreateOrderScreen(): React.ReactElement {
   const router      = useRouter();
   const queryClient = useQueryClient();
 
-  const [productId,   setProductId]   = useState('');
-  const [companyId,   setCompanyId]   = useState('');
-  const [warehouseId, setWarehouseId] = useState('');
-  const [driverId,    setDriverId]    = useState('');
-  const [quantity,    setQuantity]    = useState('');
+  const [productId,    setProductId]    = useState('');
+  const [companyId,    setCompanyId]    = useState('');
+  const [warehouseId,  setWarehouseId]  = useState('');
+  const [driverId,     setDriverId]     = useState('');
+  const [quantity,     setQuantity]     = useState('');
+  const [deliveryDate, setDeliveryDate] = useState('');
 
   const { data: products }   = useQuery({ queryKey: queryKeys.products,   queryFn: productsApi.getAll });
   const { data: warehouses } = useQuery({ queryKey: queryKeys.warehouses, queryFn: warehousesApi.getAll });
@@ -35,7 +36,13 @@ export default function CreateOrderScreen(): React.ReactElement {
   const { data: drivers }    = useQuery({ queryKey: queryKeys.drivers,    queryFn: fleetApi.getAllDrivers });
 
   const mutation = useMutation({
-    mutationFn: () => ordersApi.create({ productId, companyId, warehouseId, driverId, quantity: parseInt(quantity, 10) }),
+    mutationFn: () => ordersApi.create({
+      productId, companyId, warehouseId, driverId,
+      quantity: parseInt(quantity, 10),
+      // Send `YYYY-MM-DD` like the web form; backend accepts the ISO date.
+      // null when blank so the backend can apply its default / leave unset.
+      deliveryDate: deliveryDate.trim() ? deliveryDate.trim() : null,
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.orders });
       router.back();
@@ -91,6 +98,17 @@ export default function CreateOrderScreen(): React.ReactElement {
             onChangeText={setQuantity}
             keyboardType="number-pad"
             placeholder="0"
+          />
+        </Field>
+
+        <Field label={sl.orders.deliveryDate}>
+          <TextInput
+            style={styles.input}
+            value={deliveryDate}
+            onChangeText={setDeliveryDate}
+            placeholder="YYYY-MM-DD"
+            autoCapitalize="none"
+            autoCorrect={false}
           />
         </Field>
 
