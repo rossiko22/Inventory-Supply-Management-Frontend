@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -13,6 +13,7 @@ import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { RoleGate } from '@/components/RoleGate';
+import { UploadCloseModal } from '@/components/orders/UploadCloseModal';
 import { formatApiError } from '@/lib/http/errors';
 import { NEXT_STATUS, canAdvance, ORDER_STATUS_VALUES, type OrderStatus } from '@erp/domain';
 
@@ -27,6 +28,7 @@ export default function OrderDetailScreen(): React.ReactElement {
   const { id }      = useLocalSearchParams<{ id: string }>();
   const router      = useRouter();
   const queryClient = useQueryClient();
+  const [showUploadClose, setShowUploadClose] = useState(false);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.orderDetail(id!),
@@ -57,6 +59,12 @@ export default function OrderDetailScreen(): React.ReactElement {
   const next  = NEXT_STATUS[data.status];
 
   const confirmAdvance = (target: OrderStatus) => {
+    // Delivered -> Closed: require a delivery document upload first, matching
+    // the web orders-mf flow.
+    if (data.status === 'Delivered' && target === 'Closed') {
+      setShowUploadClose(true);
+      return;
+    }
     Alert.alert(
       sl.orders.updateStatus,
       `${sl.orders.statuses[data.status]} → ${sl.orders.statuses[target]}`,
@@ -103,6 +111,13 @@ export default function OrderDetailScreen(): React.ReactElement {
           </RoleGate>
         )}
       </ScrollView>
+
+      {showUploadClose && (
+        <UploadCloseModal
+          orderId={data.id}
+          onClose={() => setShowUploadClose(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }

@@ -17,6 +17,7 @@ import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { RoleGate } from '@/components/RoleGate';
+import { UploadCloseModal } from '@/components/orders/UploadCloseModal';
 import { formatApiError } from '@/lib/http/errors';
 import { NEXT_STATUS, canAdvance, ORDER_STATUS_VALUES, type OrderStatus } from '@erp/domain';
 import { type OrderResponse } from '@erp/api-types';
@@ -31,7 +32,8 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
 export default function OrdersScreen(): React.ReactElement {
   const router       = useRouter();
   const queryClient  = useQueryClient();
-  const [filter, setFilter] = useState<OrderStatus | null>(null);
+  const [filter,         setFilter]         = useState<OrderStatus | null>(null);
+  const [closingOrderId, setClosingOrderId] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.orders,
@@ -95,6 +97,12 @@ export default function OrdersScreen(): React.ReactElement {
             onAdvance={() => {
               const next = NEXT_STATUS[item.status];
               if (!next) return;
+              // Delivered -> Closed requires a delivery document upload first,
+              // matching the web orders-mf flow.
+              if (item.status === 'Delivered' && next === 'Closed') {
+                setClosingOrderId(item.id);
+                return;
+              }
               Alert.alert(
                 sl.orders.updateStatus,
                 `${sl.orders.statuses[item.status]} → ${sl.orders.statuses[next]}`,
@@ -113,6 +121,13 @@ export default function OrdersScreen(): React.ReactElement {
           <Text style={styles.fabText}>＋</Text>
         </TouchableOpacity>
       </RoleGate>
+
+      {closingOrderId && (
+        <UploadCloseModal
+          orderId={closingOrderId}
+          onClose={() => setClosingOrderId(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }

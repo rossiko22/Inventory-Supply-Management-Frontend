@@ -53,4 +53,21 @@ export const ordersApi = {
     const res = await axiosClient.put<WireOrder>(`/orders/${id}/status`, { status: statusValue });
     return normalize(res.data);
   },
+
+  // POST /orders/upload-document (multipart). Body matches the web flow:
+  // { File: <pdf>, OrderId: <id> }. The backend stores the delivery
+  // document; the caller is responsible for advancing status to Closed.
+  uploadDocument: async (orderId: string, file: { uri: string; name: string; mimeType?: string | null }): Promise<void> => {
+    const form = new FormData();
+    // React Native FormData accepts this shape — TypeScript doesn't know about it.
+    form.append('File', {
+      uri:  file.uri,
+      name: file.name,
+      type: file.mimeType ?? 'application/pdf',
+    } as unknown as Blob);
+    form.append('OrderId', orderId);
+    await axiosClient.post('/orders/upload-document', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
