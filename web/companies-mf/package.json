@@ -1,5 +1,5 @@
 {
-  "name": "mf-companies",
+  "name": "@erp/companies-mf",
   "version": "1.0.0",
   "private": true,
   "scripts": { "dev": "vite --port 3005", "build": "vite build", "preview": "vite preview --port 3005", "test": "vitest run" },

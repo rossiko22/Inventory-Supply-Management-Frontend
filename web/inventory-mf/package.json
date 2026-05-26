@@ -1,5 +1,5 @@
 {
-  "name": "mf-inventory",
+  "name": "@erp/inventory-mf",
   "version": "1.0.0",
   "private": true,
   "scripts": {

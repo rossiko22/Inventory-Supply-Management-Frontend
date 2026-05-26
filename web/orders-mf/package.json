@@ -1,5 +1,5 @@
 {
-  "name": "mf-orders",
+  "name": "@erp/orders-mf",
   "version": "1.0.0",
   "private": true,
   "scripts": { "dev": "vite --port 3004", "build": "vite build", "preview": "vite preview --port 3004", "test": "vitest run" },

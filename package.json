@@ -1,0 +1,13 @@
+{
+  "name": "inventory-frontend",
+  "private": true,
+  "workspaces": [
+    "mobile",
+    "web/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "mobile": "npm run start --workspace=@erp/mobile",
+    "shell": "npm run dev --workspace=@erp/shell"
+  }
+}
