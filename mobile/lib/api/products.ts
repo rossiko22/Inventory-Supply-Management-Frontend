@@ -54,4 +54,13 @@ export const productsApi = {
     const res = await axiosClient.post<CategoryResponse>('/categories', body);
     return res.data;
   },
+
+  updateCategory: async (id: string, body: CreateCategoryRequest): Promise<CategoryResponse> => {
+    const res = await axiosClient.put<CategoryResponse>(`/categories/${id}`, body);
+    return res.data;
+  },
+
+  deleteCategory: async (id: string): Promise<void> => {
+    await axiosClient.delete(`/categories/${id}`);
+  },
 };

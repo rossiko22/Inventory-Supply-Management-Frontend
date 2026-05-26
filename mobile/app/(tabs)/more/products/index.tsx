@@ -52,15 +52,23 @@ export default function ProductsScreen(): React.ReactElement {
       </View>
 
       <View style={styles.filterBar}>
-        <TextInput
-          style={styles.searchInput}
-          value={skuQuery}
-          onChangeText={setSkuQuery}
-          placeholder={sl.products.skuPlaceholder}
-          placeholderTextColor="#94a3b8"
-          autoCapitalize="characters"
-          autoCorrect={false}
-        />
+        <View style={styles.searchRow}>
+          <TextInput
+            style={[styles.searchInput, { flex: 1 }]}
+            value={skuQuery}
+            onChangeText={setSkuQuery}
+            placeholder={sl.products.skuPlaceholder}
+            placeholderTextColor="#94a3b8"
+            autoCapitalize="characters"
+            autoCorrect={false}
+          />
+          <TouchableOpacity
+            style={styles.manageBtn}
+            onPress={() => router.push('/(tabs)/more/products/categories')}
+          >
+            <Text style={styles.manageBtnText}>{sl.categories.title}</Text>
+          </TouchableOpacity>
+        </View>
         {!!categories && categories.length > 0 && (
           <FlatList
             data={[{ id: '__all__', name: sl.products.allCategories }, ...categories.map((c) => ({ id: c.id, name: c.name }))]}
@@ -126,7 +134,10 @@ const styles = StyleSheet.create({
   title:          { fontSize: 16, fontWeight: '700', color: '#1e293b' },
   add:            { color: '#3b82f6', fontSize: 22, fontWeight: '300' },
   filterBar:      { backgroundColor: '#fff', paddingHorizontal: 12, paddingTop: 8, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', gap: 8 },
+  searchRow:      { flexDirection: 'row', alignItems: 'center', gap: 8 },
   searchInput:    { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: '#1e293b', backgroundColor: '#f9fafb' },
+  manageBtn:      { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, backgroundColor: '#dbeafe' },
+  manageBtnText:  { color: '#3b82f6', fontSize: 12, fontWeight: '600' },
   chipRow:        { gap: 6, paddingVertical: 2 },
   chip:           { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e2e8f0', maxWidth: 180 },
   chipActive:     { backgroundColor: '#dbeafe', borderColor: '#3b82f6' },
