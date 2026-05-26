@@ -131,8 +131,15 @@ export default function StockScreen(): React.ReactElement {
         )}
       />
 
-      {/* Add stock FAB — INVENTORY_WRITE gated */}
+      {/* Action FABs — INVENTORY_WRITE gated. Consume (issue stock) is the
+          secondary pill stacked above the primary add FAB. */}
       <RoleGate feature="INVENTORY_WRITE">
+        <TouchableOpacity
+          style={styles.consumeFab}
+          onPress={() => router.push('/(tabs)/stock/consume')}
+        >
+          <Text style={styles.consumeFabText}>{sl.stock.consumeStock}</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.fab}
           onPress={() => router.push('/(tabs)/stock/add')}
@@ -290,6 +297,8 @@ const styles = StyleSheet.create({
   cardActionText: { color: '#3b82f6', fontSize: 12, fontWeight: '600' },
   fab:            { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: '#3b82f6', justifyContent: 'center', alignItems: 'center', elevation: 6, shadowColor: '#3b82f6', shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } },
   fabText:        { color: '#fff', fontSize: 28, fontWeight: '300', lineHeight: 32 },
+  consumeFab:     { position: 'absolute', bottom: 92, right: 24, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 24, backgroundColor: '#6d28d9', justifyContent: 'center', alignItems: 'center', elevation: 5, shadowColor: '#6d28d9', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 3 } },
+  consumeFabText: { color: '#fff', fontWeight: '700', fontSize: 13 },
   // Modal
   modalBackdrop:  { flex: 1, backgroundColor: 'rgba(15,23,42,0.45)', alignItems: 'center', justifyContent: 'center', padding: 24 },
   modalCard:      { width: '100%', maxWidth: 420, backgroundColor: '#fff', borderRadius: 14, padding: 18, gap: 8 },
