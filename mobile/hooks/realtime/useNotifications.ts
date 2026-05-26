@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { ReconnectingWsClient, type WsConnectionState } from '@/lib/realtime/wsClient';
 import { queryKeys } from '@erp/domain';
-import type { WsNotificationMessage } from '@/types/api';
+import type { WsNotificationMessage } from '@erp/api-types';
 
 // Single shared WS client across the app. Multiple components can call
 // useNotificationsSocket without opening multiple sockets.

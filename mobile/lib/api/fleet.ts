@@ -6,7 +6,7 @@ import type {
   VehicleResponse,
   CreateVehicleRequest,
   UpdateVehicleRequest,
-} from '@/types/api';
+} from '@erp/api-types';
 
 export const fleetApi = {
   // Drivers

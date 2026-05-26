@@ -1,4 +1,4 @@
-import type { ApiError } from '@/types/api';
+import type { ApiError } from '@erp/api-types';
 
 export function formatApiError(err: unknown): string {
   if (err && typeof err === 'object') {

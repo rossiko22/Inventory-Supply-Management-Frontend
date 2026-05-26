@@ -4,7 +4,7 @@ import type {
   TotalWarehousesResponse,
   CreateWarehouseRequest,
   UpdateWarehouseRequest,
-} from '@/types/api';
+} from '@erp/api-types';
 
 export const warehousesApi = {
   getAll: async (): Promise<WarehouseResponse[]> => {

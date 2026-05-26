@@ -1,5 +1,5 @@
 import { axiosClient } from '@/lib/http/client';
-import type { InventoryResponse, CreateInventoryRequest } from '@/types/api';
+import type { InventoryResponse, CreateInventoryRequest } from '@erp/api-types';
 
 // Mobile-gateway serves /stock/* and rewrites to /inventory/* downstream.
 export const inventoryApi = {

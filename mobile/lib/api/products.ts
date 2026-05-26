@@ -5,7 +5,7 @@ import type {
   UpdateProductRequest,
   CategoryResponse,
   CreateCategoryRequest,
-} from '@/types/api';
+} from '@erp/api-types';
 
 export const productsApi = {
   getAll: async (): Promise<ProductResponse[]> => {

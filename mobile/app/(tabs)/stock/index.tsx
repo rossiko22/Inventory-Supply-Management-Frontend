@@ -15,7 +15,7 @@ import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { RoleGate } from '@/components/RoleGate';
-import type { InventoryResponse, WarehouseResponse } from '@/types/api';
+import type { InventoryResponse, WarehouseResponse } from '@erp/api-types';
 
 export default function StockScreen(): React.ReactElement {
   const router = useRouter();

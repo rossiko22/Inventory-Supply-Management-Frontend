@@ -1,5 +1,5 @@
 import { axiosClient } from '@/lib/http/client';
-import type { CompanyResponse, CreateCompanyRequest, UpdateCompanyRequest } from '@/types/api';
+import type { CompanyResponse, CreateCompanyRequest, UpdateCompanyRequest } from '@erp/api-types';
 
 export const companiesApi = {
   getAll: async (): Promise<CompanyResponse[]> => {

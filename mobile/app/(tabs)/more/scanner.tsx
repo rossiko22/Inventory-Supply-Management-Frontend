@@ -10,7 +10,7 @@ import { CameraView } from 'expo-camera';
 import { useBarcode } from '@/lib/scanner/useBarcode';
 import { resolveScannedCode } from '@/lib/scanner/resolveScannedCode';
 import { sl } from '@/constants/i18n';
-import type { ProductResponse } from '@/types/api';
+import type { ProductResponse } from '@erp/api-types';
 
 type LookupState =
   | { kind: 'idle' }

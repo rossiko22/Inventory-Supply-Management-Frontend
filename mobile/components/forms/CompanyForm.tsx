@@ -4,7 +4,7 @@ import {
   ScrollView, ActivityIndicator,
 } from 'react-native';
 import { sl } from '@/constants/i18n';
-import type { CompanyResponse } from '@/types/api';
+import type { CompanyResponse } from '@erp/api-types';
 
 export interface CompanyFormValues {
   name:    string;

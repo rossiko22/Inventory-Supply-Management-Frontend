@@ -9,7 +9,7 @@ import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { RoleGate } from '@/components/RoleGate';
-import type { DriverResponse, VehicleResponse } from '@/types/api';
+import type { DriverResponse, VehicleResponse } from '@erp/api-types';
 
 type Tab = 'drivers' | 'vehicles';
 

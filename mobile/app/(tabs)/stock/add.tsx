@@ -16,7 +16,7 @@ import { productsApi } from '@/lib/api/products';
 import { queryKeys } from '@erp/domain';
 import { formatApiError } from '@/lib/http/errors';
 import { sl } from '@/constants/i18n';
-import type { WarehouseResponse, ProductResponse } from '@/types/api';
+import type { WarehouseResponse, ProductResponse } from '@erp/api-types';
 
 export default function AddStockScreen(): React.ReactElement {
   const router       = useRouter();

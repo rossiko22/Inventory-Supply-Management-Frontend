@@ -1,5 +1,5 @@
 import { axiosClient } from '@/lib/http/client';
-import type { NotificationResponse } from '@/types/api';
+import type { NotificationResponse } from '@erp/api-types';
 
 export type DevicePlatform = 'ios' | 'android' | 'web';
 

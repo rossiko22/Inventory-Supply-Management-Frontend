@@ -1,5 +1,5 @@
 import { WS_URL } from '@/lib/http/client';
-import type { WsNotificationMessage } from '@/types/api';
+import type { WsNotificationMessage } from '@erp/api-types';
 
 type MessageHandler = (msg: WsNotificationMessage) => void;
 type StateHandler   = (state: WsConnectionState) => void;

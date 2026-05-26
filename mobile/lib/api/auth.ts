@@ -1,5 +1,5 @@
 import { axiosClient } from '@/lib/http/client';
-import type { AuthResponse, LoginRequest, RegisterRequest } from '@/types/api';
+import type { AuthResponse, LoginRequest, RegisterRequest } from '@erp/api-types';
 
 export const authApi = {
   login: async (body: LoginRequest): Promise<{ response: AuthResponse; token: string; refreshToken: string | null }> => {

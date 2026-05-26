@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
-import type { ProductResponse } from '@/types/api';
+import type { ProductResponse } from '@erp/api-types';
 
 // Resolves a scanned SKU to a product via the dedicated backend endpoint
 // (GET /products/by-sku — added in product-service when ARCHITECTURE_GAPS.md

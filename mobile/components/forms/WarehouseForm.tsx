@@ -4,7 +4,8 @@ import {
   ScrollView, ActivityIndicator,
 } from 'react-native';
 import { sl } from '@/constants/i18n';
-import { COUNTRIES, CITIES, type Country, type City, type WarehouseResponse } from '@/types/api';
+import { COUNTRIES, CITIES } from '@/constants/warehouseOptions';
+import { type Country, type City, type WarehouseResponse } from '@erp/api-types';
 
 export interface WarehouseFormValues {
   name:          string;

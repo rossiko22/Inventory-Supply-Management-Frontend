@@ -17,7 +17,7 @@ import { ErrorView } from '@/components/ui/ErrorView';
 import { RoleGate } from '@/components/RoleGate';
 import { formatApiError } from '@/lib/http/errors';
 import { NEXT_STATUS, canAdvance, ORDER_STATUS_VALUES, type OrderStatus } from '@erp/domain';
-import { type OrderResponse } from '@/types/api';
+import { type OrderResponse } from '@erp/api-types';
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   Requested: '#f59e0b',

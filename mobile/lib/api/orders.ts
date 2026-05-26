@@ -3,7 +3,7 @@ import { ORDER_STATUS_NAMES, type OrderStatus } from '@erp/domain';
 import {
   type OrderResponse,
   type CreateOrderRequest,
-} from '@/types/api';
+} from '@erp/api-types';
 
 // Backend serialises Status as a numeric ordinal (0..3). UI uses the string
 // names. Normalise every response here so the rest of the app stays in string

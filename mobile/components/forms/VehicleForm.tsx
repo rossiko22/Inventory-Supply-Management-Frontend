@@ -4,7 +4,7 @@ import {
   ScrollView, ActivityIndicator,
 } from 'react-native';
 import { sl } from '@/constants/i18n';
-import type { VehicleResponse } from '@/types/api';
+import type { VehicleResponse } from '@erp/api-types';
 
 export interface VehicleFormValues {
   registrationPlate: string;

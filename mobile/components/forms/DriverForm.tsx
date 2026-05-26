@@ -8,7 +8,7 @@ import { fleetApi } from '@/lib/api/fleet';
 import { companiesApi } from '@/lib/api/companies';
 import { queryKeys } from '@erp/domain';
 import { sl } from '@/constants/i18n';
-import type { DriverResponse } from '@/types/api';
+import type { DriverResponse } from '@erp/api-types';
 
 export interface DriverFormValues {
   name:      string;

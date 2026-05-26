@@ -13,7 +13,7 @@ import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { useNotificationsSocket } from '@/hooks/realtime/useNotifications';
-import type { NotificationResponse } from '@/types/api';
+import type { NotificationResponse } from '@erp/api-types';
 
 const SEVERITY_COLORS: Record<string, string> = {
   INFO:    '#0ea5e9',

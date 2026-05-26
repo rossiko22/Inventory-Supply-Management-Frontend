@@ -9,7 +9,7 @@ import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { RoleGate } from '@/components/RoleGate';
-import type { WarehouseResponse } from '@/types/api';
+import type { WarehouseResponse } from '@erp/api-types';
 
 export default function WarehousesScreen(): React.ReactElement {
   const router = useRouter();
