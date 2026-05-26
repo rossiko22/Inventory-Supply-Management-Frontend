@@ -28,18 +28,30 @@ export const colors = {
   textPlaceholder:'#94a3b8',
   textOnDark:     '#f8fafc',
 
-  // Semantic
-  success:        '#22c55e',
+  // Semantic — aligned with the web MFs.
+  success:        '#10b981',   // emerald-500 (matches MFs' Delivered, NotificationsPanel success)
   successSoft:    '#ecfdf5',
   successText:    '#065f46',
   warning:        '#f59e0b',
   warningSoft:    '#fef3c7',
   warningText:    '#92400e',
-  danger:         '#dc2626',
+  danger:         '#dc2626',   // red-600 (matches MFs' destructive + low-stock)
   dangerSoft:     '#fef2f2',
   dangerBorder:   '#fecaca',
   dangerText:     '#b91c1c',
-  info:           '#0ea5e9',
+  info:           '#3b82f6',   // blue-500 (matches NotificationsPanel info severity)
+
+  // Order status (must match orders-mf STATUS_COLOR exactly)
+  statusRequested: '#f59e0b',
+  statusApproved:  '#3b82f6',
+  statusDelivered: '#10b981',
+  statusClosed:    '#64748b',
+
+  // Notification severity (matches NotificationsPanel SEVERITY_COLOR)
+  severityInfo:    '#3b82f6',
+  severityWarning: '#f59e0b',
+  severityError:   '#dc2626',
+  severitySuccess: '#16a34a',
 
   // Scanner / dark surfaces (used by the scanner screen only)
   darkBg:         '#0f172a',

@@ -29,8 +29,8 @@ export default function TabLayout(): React.ReactElement {
         tabBarActiveTintColor:   '#3b82f6',
         tabBarInactiveTintColor: '#94a3b8',
         tabBarStyle: { borderTopColor: '#e2e8f0' },
-        headerStyle:  { backgroundColor: '#3b82f6' },
-        headerTintColor: '#fff',
+        headerStyle:  { backgroundColor: '#1e293b' },
+        headerTintColor: '#f8fafc',
         headerTitleStyle: { fontWeight: '700' },
       }}
     >

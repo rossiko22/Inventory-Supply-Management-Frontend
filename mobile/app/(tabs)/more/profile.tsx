@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   roleBadge:  { marginTop: 10, backgroundColor: '#dbeafe', paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20 },
   roleText:   { color: '#3b82f6', fontWeight: '600', fontSize: 13 },
   logoutBtn:  { width: '100%', backgroundColor: '#fee2e2', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  logoutText: { color: '#ef4444', fontWeight: '700', fontSize: 15 },
+  logoutText: { color: '#dc2626', fontWeight: '700', fontSize: 15 },
   section:    { width: '100%', backgroundColor: '#fff', borderRadius: 14, padding: 16, gap: 10 },
   sectionLabel: { fontSize: 13, fontWeight: '600', color: '#475569' },
   langRow:    { flexDirection: 'row', gap: 8 },

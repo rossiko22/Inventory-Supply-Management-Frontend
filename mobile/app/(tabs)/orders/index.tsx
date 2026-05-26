@@ -21,9 +21,9 @@ import { type OrderResponse } from '@erp/api-types';
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   Requested: '#f59e0b',
-  Approved:  '#0ea5e9',
-  Delivered: '#22c55e',
-  Closed:    '#94a3b8',
+  Approved:  '#3b82f6',
+  Delivered: '#10b981',
+  Closed:    '#64748b',
 };
 
 export default function OrdersScreen(): React.ReactElement {

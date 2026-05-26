@@ -36,7 +36,7 @@ export default function WarehouseDetailScreen(): React.ReactElement {
   if (isError || !data) return <ErrorView onRetry={refetch} />;
 
   const pct = data.totalCapacity > 0 ? data.usedCapacity / data.totalCapacity : 0;
-  const barColor = pct > 0.9 ? '#ef4444' : pct > 0.7 ? '#f59e0b' : '#22c55e';
+  const barColor = pct > 0.9 ? '#dc2626' : pct > 0.7 ? '#f59e0b' : '#10b981';
 
   const confirmDelete = () => {
     Alert.alert(

@@ -65,7 +65,7 @@ export default function WarehousesScreen(): React.ReactElement {
 
 function WarehouseCard({ item, onPress }: { item: WarehouseResponse; onPress: () => void }): React.ReactElement {
   const pct = item.totalCapacity > 0 ? item.usedCapacity / item.totalCapacity : 0;
-  const barColor = pct > 0.9 ? '#ef4444' : pct > 0.7 ? '#f59e0b' : '#22c55e';
+  const barColor = pct > 0.9 ? '#dc2626' : pct > 0.7 ? '#f59e0b' : '#10b981';
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>

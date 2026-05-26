@@ -16,9 +16,10 @@ import { useNotificationsSocket } from '@/hooks/realtime/useNotifications';
 import type { NotificationResponse } from '@erp/api-types';
 
 const SEVERITY_COLORS: Record<string, string> = {
-  INFO:    '#0ea5e9',
+  INFO:    '#3b82f6',
   WARNING: '#f59e0b',
-  ERROR:   '#ef4444',
+  ERROR:   '#dc2626',
+  SUCCESS: '#16a34a',
 };
 
 export default function NotificationsScreen(): React.ReactElement {
@@ -54,7 +55,7 @@ export default function NotificationsScreen(): React.ReactElement {
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.statusBar}>
-        <View style={[styles.statusDot, { backgroundColor: connected ? '#22c55e' : fallbackActive ? '#f59e0b' : '#94a3b8' }]} />
+        <View style={[styles.statusDot, { backgroundColor: connected ? '#10b981' : fallbackActive ? '#f59e0b' : '#94a3b8' }]} />
         <Text style={styles.statusText}>
           {connected
             ? sl.notifications.liveOn

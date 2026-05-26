@@ -62,7 +62,7 @@ export default function DashboardScreen(): React.ReactElement {
       </View>
       <View style={styles.kpiRow}>
         <KpiCard label="Aktivna naročila" value={pendingOrders}         color="#f59e0b" />
-        <KpiCard label="Neprebrana obvestila" value={unread?.length ?? 0} color="#ef4444" />
+        <KpiCard label="Neprebrana obvestila" value={unread?.length ?? 0} color="#dc2626" />
       </View>
 
       {unread && unread.length > 0 && (
