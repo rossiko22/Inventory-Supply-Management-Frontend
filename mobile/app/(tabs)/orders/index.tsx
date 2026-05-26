@@ -10,6 +10,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ordersApi } from '@/lib/api/orders';
+import { productsApi } from '@/lib/api/products';
+import { companiesApi } from '@/lib/api/companies';
 import { queryKeys } from '@erp/domain';
 import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
@@ -35,6 +37,19 @@ export default function OrdersScreen(): React.ReactElement {
     queryKey: queryKeys.orders,
     queryFn:  ordersApi.getAll,
   });
+  const { data: products }  = useQuery({ queryKey: queryKeys.products,  queryFn: productsApi.getAll });
+  const { data: companies } = useQuery({ queryKey: queryKeys.companies, queryFn: companiesApi.getAll });
+
+  const productName = React.useMemo(() => {
+    const m: Record<string, string> = {};
+    products?.forEach((p) => { m[p.id] = p.name; });
+    return m;
+  }, [products]);
+  const companyName = React.useMemo(() => {
+    const m: Record<string, string> = {};
+    companies?.forEach((c) => { m[c.id] = c.name; });
+    return m;
+  }, [companies]);
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
@@ -74,6 +89,8 @@ export default function OrdersScreen(): React.ReactElement {
         renderItem={({ item }) => (
           <OrderCard
             order={item}
+            productName={productName[item.productId] ?? item.productId.slice(0, 8) + '…'}
+            companyName={companyName[item.companyId] ?? item.companyId.slice(0, 8) + '…'}
             onPress={() => router.push({ pathname: '/(tabs)/orders/[id]', params: { id: item.id } })}
             onAdvance={() => {
               const next = NEXT_STATUS[item.status];
@@ -100,19 +117,28 @@ export default function OrdersScreen(): React.ReactElement {
   );
 }
 
-function OrderCard({ order, onAdvance, onPress }: { order: OrderResponse; onAdvance: () => void; onPress: () => void }): React.ReactElement {
+function OrderCard({
+  order, productName, companyName, onAdvance, onPress,
+}: {
+  order: OrderResponse;
+  productName: string;
+  companyName: string;
+  onAdvance: () => void;
+  onPress: () => void;
+}): React.ReactElement {
   const color  = STATUS_COLORS[order.status];
   const canAdv = canAdvance(order.status);
 
   return (
     <TouchableOpacity style={[styles.card, { borderLeftColor: color }]} onPress={onPress}>
       <View style={styles.cardHeader}>
-        <Text style={styles.orderId} numberOfLines={1}>#{order.id.slice(0, 8)}</Text>
+        <Text style={styles.orderId} numberOfLines={1}>{productName}</Text>
         <View style={[styles.badge, { backgroundColor: color + '22' }]}>
           <Text style={[styles.badgeText, { color }]}>{sl.orders.statuses[order.status]}</Text>
         </View>
       </View>
-      <Text style={styles.meta}>Kol: {order.quantity}  ·  {new Date(order.createdAt).toLocaleDateString('sl-SI')}</Text>
+      <Text style={styles.subTitle} numberOfLines={1}>{companyName}</Text>
+      <Text style={styles.meta}>{sl.orders.quantity}: {order.quantity}  ·  {new Date(order.createdAt).toLocaleDateString('sl-SI')}</Text>
       {canAdv && (
         <TouchableOpacity style={styles.advBtn} onPress={(e) => { e.stopPropagation?.(); onAdvance(); }}>
           <Text style={styles.advBtnText}>
@@ -135,8 +161,9 @@ const styles = StyleSheet.create({
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 80 },
   empty:          { color: '#94a3b8', fontSize: 14 },
   card:           { backgroundColor: '#fff', borderRadius: 12, padding: 14, borderLeftWidth: 3, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
-  cardHeader:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  orderId:        { fontSize: 14, fontWeight: '700', color: '#1e293b' },
+  cardHeader:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  orderId:        { fontSize: 14, fontWeight: '700', color: '#1e293b', flex: 1, marginRight: 8 },
+  subTitle:       { fontSize: 12, color: '#475569', marginBottom: 6 },
   badge:          { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   badgeText:      { fontSize: 11, fontWeight: '600' },
   meta:           { fontSize: 12, color: '#64748b', marginBottom: 10 },

@@ -4,6 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/lib/api/orders';
+import { productsApi } from '@/lib/api/products';
+import { companiesApi } from '@/lib/api/companies';
+import { warehousesApi } from '@/lib/api/warehouses';
+import { fleetApi } from '@/lib/api/fleet';
 import { queryKeys } from '@erp/domain';
 import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
@@ -29,6 +33,13 @@ export default function OrderDetailScreen(): React.ReactElement {
     queryFn:  () => ordersApi.getById(id!),
     enabled:  !!id,
   });
+  const { data: products }   = useQuery({ queryKey: queryKeys.products,   queryFn: productsApi.getAll });
+  const { data: companies }  = useQuery({ queryKey: queryKeys.companies,  queryFn: companiesApi.getAll });
+  const { data: warehouses } = useQuery({ queryKey: queryKeys.warehouses, queryFn: warehousesApi.getAll });
+  const { data: drivers }    = useQuery({ queryKey: queryKeys.drivers,    queryFn: fleetApi.getAllDrivers });
+
+  const nameById = (list: { id: string; name: string }[] | undefined, fkId: string): string =>
+    list?.find((x) => x.id === fkId)?.name ?? `${fkId.slice(0, 8)}…`;
 
   const statusMutation = useMutation({
     mutationFn: (status: OrderStatus) => ordersApi.updateStatus(id!, ORDER_STATUS_VALUES[status]),
@@ -73,10 +84,10 @@ export default function OrderDetailScreen(): React.ReactElement {
         </View>
 
         <Field label={sl.orders.quantity}     value={String(data.quantity)} />
-        <Field label={sl.orders.product}      value={data.productId}   mono />
-        <Field label={sl.orders.warehouse}    value={data.warehouseId} mono />
-        <Field label={sl.orders.company}      value={data.companyId}   mono />
-        <Field label={sl.orders.driver}       value={data.driverId}    mono />
+        <Field label={sl.orders.product}      value={nameById(products,   data.productId)} />
+        <Field label={sl.orders.warehouse}    value={nameById(warehouses, data.warehouseId)} />
+        <Field label={sl.orders.company}      value={nameById(companies,  data.companyId)} />
+        <Field label={sl.orders.driver}       value={nameById(drivers,    data.driverId)} />
         <Field label={sl.orders.deliveryDate} value={data.deliveryDate ? new Date(data.deliveryDate).toLocaleString('sl-SI') : '—'} />
         <Field label="Ustvarjeno"             value={new Date(data.createdAt).toLocaleString('sl-SI')} />
 

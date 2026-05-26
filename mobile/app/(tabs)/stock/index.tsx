@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { inventoryApi } from '@/lib/api/inventory';
 import { warehousesApi } from '@/lib/api/warehouses';
+import { productsApi } from '@/lib/api/products';
 import { queryKeys } from '@erp/domain';
 import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
@@ -25,6 +26,10 @@ export default function StockScreen(): React.ReactElement {
     queryKey: queryKeys.warehouses,
     queryFn:  warehousesApi.getAll,
   });
+  const { data: products } = useQuery({
+    queryKey: queryKeys.products,
+    queryFn:  productsApi.getAll,
+  });
 
   const stockQuery = useQuery({
     queryKey: selectedWarehouse ? queryKeys.stockByWarehouse(selectedWarehouse) : queryKeys.stockAll,
@@ -38,6 +43,11 @@ export default function StockScreen(): React.ReactElement {
     warehouses?.forEach((w) => { m[w.id] = w.name; });
     return m;
   }, [warehouses]);
+  const productMap = React.useMemo(() => {
+    const m: Record<string, string> = {};
+    products?.forEach((p) => { m[p.id] = p.name; });
+    return m;
+  }, [products]);
 
   if (stockQuery.isLoading) return <LoadingView />;
   if (stockQuery.isError)   return <ErrorView onRetry={stockQuery.refetch} />;
@@ -91,7 +101,11 @@ export default function StockScreen(): React.ReactElement {
           </View>
         }
         renderItem={({ item }) => (
-          <StockCard item={item} warehouseName={warehouseMap[item.warehouseId] ?? item.warehouseId} />
+          <StockCard
+            item={item}
+            warehouseName={warehouseMap[item.warehouseId] ?? item.warehouseId.slice(0, 8) + '…'}
+            productName={productMap[item.productId] ?? item.productId.slice(0, 8) + '…'}
+          />
         )}
       />
 
@@ -108,7 +122,13 @@ export default function StockScreen(): React.ReactElement {
   );
 }
 
-function StockCard({ item, warehouseName }: { item: InventoryResponse; warehouseName: string }): React.ReactElement {
+function StockCard({
+  item, warehouseName, productName,
+}: {
+  item: InventoryResponse;
+  warehouseName: string;
+  productName: string;
+}): React.ReactElement {
   // Gap 13 closed: use the server-supplied min threshold when present.
   // Items still without thresholds (created pre-migration) get a sensible
   // default so the badge stays visible for the warehouse manager.
@@ -118,7 +138,7 @@ function StockCard({ item, warehouseName }: { item: InventoryResponse; warehouse
     <View style={[styles.card, isLow && styles.cardLow]}>
       <View style={styles.cardHeader}>
         <Text style={styles.productId} numberOfLines={1}>
-          {sl.stock.product}: {item.productId}
+          {productName}
         </Text>
         {isLow && (
           <View style={styles.badge}>
