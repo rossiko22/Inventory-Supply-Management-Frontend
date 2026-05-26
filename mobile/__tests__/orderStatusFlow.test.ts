@@ -1,4 +1,4 @@
-import { NEXT_STATUS, nextStatus, canAdvance } from '@/lib/orders/statusFlow';
+import { NEXT_STATUS, nextStatus, canAdvance } from '@erp/domain';
 
 describe('order status flow', () => {
   it('advances one step at a time through the full chain', () => {

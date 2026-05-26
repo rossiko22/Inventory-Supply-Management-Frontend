@@ -1,8 +1,7 @@
 import { axiosClient } from '@/lib/http/client';
+import { ORDER_STATUS_NAMES, type OrderStatus } from '@erp/domain';
 import {
-  ORDER_STATUS_NAMES,
   type OrderResponse,
-  type OrderStatus,
   type CreateOrderRequest,
 } from '@/types/api';
 

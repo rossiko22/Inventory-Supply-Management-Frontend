@@ -9,5 +9,12 @@
   "scripts": {
     "mobile": "npm run start --workspace=@erp/mobile",
     "shell": "npm run dev --workspace=@erp/shell"
+  },
+  "overrides": {
+    "react-test-renderer": "19.1.0"
+  },
+  "devDependencies": {
+    "react-test-renderer": "19.1.0",
+    "@testing-library/dom": "^10.4.0"
   }
 }

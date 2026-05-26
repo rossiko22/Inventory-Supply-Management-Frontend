@@ -8,7 +8,7 @@ import { View,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from '@/lib/api/notifications';
-import { queryKeys } from '@/constants/queryKeys';
+import { queryKeys } from '@erp/domain';
 import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';

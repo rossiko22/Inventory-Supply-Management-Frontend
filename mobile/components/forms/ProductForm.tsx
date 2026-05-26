@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
-import { queryKeys } from '@/constants/queryKeys';
+import { queryKeys } from '@erp/domain';
 import { sl } from '@/constants/i18n';
 import type { CategoryResponse, ProductResponse } from '@/types/api';
 

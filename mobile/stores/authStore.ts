@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { AppRole } from '@/constants/roles';
-import { resolveRole } from '@/constants/roles';
+import type { AppRole } from '@erp/domain';
+import { resolveRole } from '@erp/domain';
 
 export interface AuthUser {
   id:    string;

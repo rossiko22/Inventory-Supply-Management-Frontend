@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { inventoryApi } from '@/lib/api/inventory';
 import { warehousesApi } from '@/lib/api/warehouses';
-import { queryKeys } from '@/constants/queryKeys';
+import { queryKeys } from '@erp/domain';
 import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';

@@ -15,7 +15,7 @@ import { productsApi } from '@/lib/api/products';
 import { warehousesApi } from '@/lib/api/warehouses';
 import { companiesApi } from '@/lib/api/companies';
 import { fleetApi } from '@/lib/api/fleet';
-import { queryKeys } from '@/constants/queryKeys';
+import { queryKeys } from '@erp/domain';
 import { formatApiError } from '@/lib/http/errors';
 import { sl } from '@/constants/i18n';
 

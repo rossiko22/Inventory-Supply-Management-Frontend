@@ -10,14 +10,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ordersApi } from '@/lib/api/orders';
-import { queryKeys } from '@/constants/queryKeys';
+import { queryKeys } from '@erp/domain';
 import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { RoleGate } from '@/components/RoleGate';
 import { formatApiError } from '@/lib/http/errors';
-import { NEXT_STATUS, canAdvance } from '@/lib/orders/statusFlow';
-import { ORDER_STATUS_VALUES, type OrderResponse, type OrderStatus } from '@/types/api';
+import { NEXT_STATUS, canAdvance, ORDER_STATUS_VALUES, type OrderStatus } from '@erp/domain';
+import { type OrderResponse } from '@/types/api';
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   Requested: '#f59e0b',

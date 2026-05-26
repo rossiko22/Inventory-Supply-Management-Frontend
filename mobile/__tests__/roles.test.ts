@@ -1,4 +1,4 @@
-import { resolveRole, hasFeature } from '@/constants/roles';
+import { resolveRole, hasFeature } from '@erp/domain';
 
 describe('resolveRole', () => {
   it('maps known backend roles', () => {

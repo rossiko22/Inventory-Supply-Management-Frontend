@@ -1,5 +1,5 @@
 import React from 'react';
-import { hasFeature, type FeatureKey } from '@/constants/roles';
+import { hasFeature, type FeatureKey } from '@erp/domain';
 import { useRole } from '@/hooks/useRole';
 
 interface Props {

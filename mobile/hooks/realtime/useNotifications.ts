@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { ReconnectingWsClient, type WsConnectionState } from '@/lib/realtime/wsClient';
-import { queryKeys } from '@/constants/queryKeys';
+import { queryKeys } from '@erp/domain';
 import type { WsNotificationMessage } from '@/types/api';
 
 // Single shared WS client across the app. Multiple components can call

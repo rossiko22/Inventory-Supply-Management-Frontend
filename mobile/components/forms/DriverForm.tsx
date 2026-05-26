@@ -6,7 +6,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { fleetApi } from '@/lib/api/fleet';
 import { companiesApi } from '@/lib/api/companies';
-import { queryKeys } from '@/constants/queryKeys';
+import { queryKeys } from '@erp/domain';
 import { sl } from '@/constants/i18n';
 import type { DriverResponse } from '@/types/api';
 

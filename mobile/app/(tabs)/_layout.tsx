@@ -6,7 +6,7 @@ import { useNotificationsSocket } from '@/hooks/realtime/useNotifications';
 import { usePushRegistration } from '@/hooks/usePushRegistration';
 import { useQuery } from '@tanstack/react-query';
 import { notificationsApi } from '@/lib/api/notifications';
-import { queryKeys } from '@/constants/queryKeys';
+import { queryKeys } from '@erp/domain';
 
 function UnreadBadge(): number | undefined {
   const { data } = useQuery({

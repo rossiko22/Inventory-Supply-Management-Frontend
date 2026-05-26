@@ -13,7 +13,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inventoryApi } from '@/lib/api/inventory';
 import { warehousesApi } from '@/lib/api/warehouses';
 import { productsApi } from '@/lib/api/products';
-import { queryKeys } from '@/constants/queryKeys';
+import { queryKeys } from '@erp/domain';
 import { formatApiError } from '@/lib/http/errors';
 import { sl } from '@/constants/i18n';
 import type { WarehouseResponse, ProductResponse } from '@/types/api';

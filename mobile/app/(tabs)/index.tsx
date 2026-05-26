@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { warehousesApi } from '@/lib/api/warehouses';
 import { ordersApi } from '@/lib/api/orders';
 import { notificationsApi } from '@/lib/api/notifications';
-import { queryKeys } from '@/constants/queryKeys';
+import { queryKeys } from '@erp/domain';
 import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { useAuthStore } from '@/stores/authStore';

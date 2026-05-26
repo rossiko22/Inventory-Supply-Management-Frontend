@@ -1,6 +1,11 @@
 // DTOs mirroring backend response shapes exactly.
 // Source of truth: service controllers + mobile-gateway route comments.
 
+// OrderStatus + its runtime ordinal maps and transition flow live in
+// @erp/domain (runtime values can't live in the types-only @erp/api-types).
+import type { OrderStatus } from '@erp/domain';
+export type { OrderStatus };
+
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 export interface AuthResponse {
@@ -133,9 +138,6 @@ export interface CreateCategoryRequest {
 
 // ─── Orders ──────────────────────────────────────────────────────────────────
 
-// Status values mirror order-service Domain/Enums/Status.cs
-export type OrderStatus = 'Requested' | 'Approved' | 'Delivered' | 'Closed';
-
 export interface OrderResponse {
   id:           string;
   productId:    string;
@@ -157,25 +159,6 @@ export interface CreateOrderRequest {
   quantity:     number;
   deliveryDate?: string | null;
 }
-
-// Mobile uses PUT /orders/:id/status { status: number }
-// Status numeric mapping matches the C# enum ordinal: Requested=0, Approved=1, Delivered=2, Closed=3
-export const ORDER_STATUS_VALUES: Record<OrderStatus, number> = {
-  Requested: 0,
-  Approved:  1,
-  Delivered: 2,
-  Closed:    3,
-};
-
-// Inverse map — backend serialises the enum as a number on responses, so
-// `ordersApi.getAll/create/updateStatus` normalises every response through
-// this lookup before handing it to React Query.
-export const ORDER_STATUS_NAMES: Record<number, OrderStatus> = {
-  0: 'Requested',
-  1: 'Approved',
-  2: 'Delivered',
-  3: 'Closed',
-};
 
 // ─── Companies ───────────────────────────────────────────────────────────────
 
