@@ -38,7 +38,7 @@ export default function Layout({ user, onLogout, children }: Props) {
       }}>
         <div style={{ padding: '0 1.25rem 1.5rem', borderBottom: '1px solid #334155' }}>
           <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>
-            {user.role}
+            {s.roles[user.role as keyof typeof s.roles] ?? user.role}
           </div>
           <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{user.name}</div>
           <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.125rem' }}>{user.email}</div>

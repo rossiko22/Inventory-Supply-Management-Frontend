@@ -27,6 +27,7 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   Approved:  '#3b82f6',
   Delivered: '#10b981',
   Closed:    '#64748b',
+  Rejected:  '#dc2626',
 };
 
 export default function OrdersScreen(): React.ReactElement {
@@ -69,14 +70,14 @@ export default function OrdersScreen(): React.ReactElement {
     <SafeAreaView style={styles.root}>
       {/* Status filter */}
       <View style={styles.filterRow}>
-        {([null, 'Requested', 'Approved', 'Delivered', 'Closed'] as (OrderStatus | null)[]).map((s) => (
+        {([null, 'Requested', 'Approved', 'Delivered', 'Closed', 'Rejected'] as (OrderStatus | null)[]).map((s) => (
           <TouchableOpacity
             key={s ?? 'all'}
             style={[styles.chip, filter === s && styles.chipActive]}
             onPress={() => setFilter(s)}
           >
             <Text style={[styles.chipText, filter === s && styles.chipTextActive]}>
-              {s ? sl.orders.statuses[s] : 'Vsa'}
+              {s ? sl.orders.statuses[s] : sl.orders.all}
             </Text>
           </TouchableOpacity>
         ))}
@@ -142,7 +143,9 @@ function OrderCard({
   onPress: () => void;
 }): React.ReactElement {
   const color  = STATUS_COLORS[order.status];
-  const canAdv = canAdvance(order.status);
+  // Requested orders are approved/rejected from the detail screen (which runs
+  // the warehouse-capacity check), so the quick-advance shortcut is hidden here.
+  const canAdv = canAdvance(order.status) && order.status !== 'Requested';
 
   return (
     <TouchableOpacity style={[styles.card, { borderLeftColor: color }]} onPress={onPress}>

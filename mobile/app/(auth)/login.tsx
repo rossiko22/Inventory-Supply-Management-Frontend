@@ -11,6 +11,8 @@ import { authApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/stores/authStore';
 import { formatApiError } from '@/lib/http/errors';
 import { sl } from '@/constants/i18n';
+import { useLocaleStore } from '@/lib/i18n/locale';
+import { LOCALES, LOCALE_LABEL, type Locale } from '@erp/i18n';
 
 const schema = z.object({
   email:    z.string().email('Vnesite veljavno e-poštno naslov'),
@@ -21,6 +23,8 @@ type FormData = z.infer<typeof schema>;
 export default function LoginScreen(): React.ReactElement {
   const router   = useRouter();
   const setAuth  = useAuthStore((s) => s.setAuth);
+  const locale    = useLocaleStore((s) => s.locale);
+  const setLocale = useLocaleStore((s) => s.setLocale);
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -49,6 +53,21 @@ export default function LoginScreen(): React.ReactElement {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.card}>
+        <View style={styles.localeRow}>
+          {LOCALES.map((l: Locale) => {
+            const active = l === locale;
+            return (
+              <TouchableOpacity
+                key={l}
+                onPress={() => setLocale(l)}
+                accessibilityLabel={LOCALE_LABEL[l]}
+                style={[styles.localeBtn, active && styles.localeBtnActive]}
+              >
+                <Text style={[styles.localeText, active && styles.localeTextActive]}>{l.toUpperCase()}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
         <Text style={styles.title}>🚛 Pocket Logistics</Text>
         <Text style={styles.subtitle}>{sl.auth.login}</Text>
 
@@ -126,4 +145,9 @@ const styles = StyleSheet.create({
   btnDisabled:{ opacity: 0.6 },
   btnText:    { color: '#fff', fontWeight: '700', fontSize: 15 },
   link:       { marginTop: 16, textAlign: 'center', color: '#3b82f6', fontSize: 13 },
+  localeRow:       { flexDirection: 'row', justifyContent: 'flex-end', gap: 6, marginBottom: 8 },
+  localeBtn:       { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, backgroundColor: '#e2e8f0' },
+  localeBtnActive: { backgroundColor: '#3b82f6' },
+  localeText:      { fontSize: 12, fontWeight: '600', color: '#475569' },
+  localeTextActive:{ color: '#fff', fontWeight: '700' },
 });

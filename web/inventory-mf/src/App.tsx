@@ -35,8 +35,32 @@ function nameById(options: Option[], id: string) {
   return options.find(o => o.id === id)?.label ?? id.slice(0, 8) + '…';
 }
 
+function useToast() {
+  const [msg, setMsg] = useState<string | null>(null);
+  const [variant, setVariant] = useState<'success' | 'error'>('success');
+  useEffect(() => {
+    if (!msg) return;
+    const t = setTimeout(() => setMsg(null), 2600);
+    return () => clearTimeout(t);
+  }, [msg]);
+  const showToast = (m: string, v: 'success' | 'error' = 'success') => { setVariant(v); setMsg(m); };
+  const toast = msg ? (
+    <div style={{
+      position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)',
+      background: variant === 'success' ? '#16a34a' : '#dc2626', color: '#fff',
+      padding: '0.75rem 1.4rem', borderRadius: 10, boxShadow: '0 8px 30px rgba(0,0,0,.22)',
+      fontSize: '0.9rem', fontWeight: 600, zIndex: 200, animation: 'erpToastIn .28s ease',
+    }}>
+      <style>{'@keyframes erpToastIn{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translate(-50%,0)}}'}</style>
+      {msg}
+    </div>
+  ) : null;
+  return { showToast, toast };
+}
+
 export default function App() {
   const s = useStrings();
+  const { showToast, toast } = useToast();
   const [items, setItems]           = useState<InventoryItem[]>([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
@@ -171,15 +195,15 @@ export default function App() {
 
   async function handleConsume(e: React.FormEvent) {
     e.preventDefault();
-    if (selectedItems.length === 0) { alert(s.stock.consumeSelect); return; }
+    if (selectedItems.length === 0) { showToast(s.stock.consumeSelect, 'error'); return; }
     for (const it of selectedItems) {
       const q = selected[it.id];
-      if (!q || q <= 0) { alert(s.stock.consumeQtyGt0); return; }
-      if (q > it.quantity) { alert(s.stock.consumeQtyMax); return; }
+      if (!q || q <= 0) { showToast(s.stock.consumeQtyGt0, 'error'); return; }
+      if (q > it.quantity) { showToast(s.stock.consumeQtyMax, 'error'); return; }
     }
     if (proofFile) {
       const isPdf = proofFile.type === 'application/pdf' || proofFile.name.toLowerCase().endsWith('.pdf');
-      if (!isPdf) { alert(s.stock.proofMustPdf); return; }
+      if (!isPdf) { showToast(s.stock.proofMustPdf, 'error'); return; }
     }
 
     setBusy(true);
@@ -207,8 +231,8 @@ export default function App() {
       setPurpose(''); setDescription(''); setProofFile(null);
       setDateOfUsage(new Date().toISOString().slice(0, 10));
       reload();
-      alert(s.stock.consumeSaved);
-    } catch (e) { alert(String(e)); }
+      showToast(s.stock.consumeSaved, 'success');
+    } catch (e) { showToast(String(e), 'error'); }
     finally { setBusy(false); }
   }
 
@@ -379,6 +403,8 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {toast}
     </div>
   );
 }

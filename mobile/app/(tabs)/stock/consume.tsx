@@ -23,6 +23,7 @@ import { sl } from '@/constants/i18n';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { formatApiError } from '@/lib/http/errors';
+import { showToast } from '@/stores/toastStore';
 import type { InventoryResponse } from '@erp/api-types';
 
 interface PickedFile {
@@ -114,9 +115,8 @@ export default function ConsumeStockScreen(): React.ReactElement {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.stockAll });
-      Alert.alert(sl.common.save, sl.stock.consumeSaved, [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      showToast(sl.stock.consumeSaved, 'success');
+      router.back();
     },
     onError: (err) => Alert.alert(sl.common.error, formatApiError(err)),
   });

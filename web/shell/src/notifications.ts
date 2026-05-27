@@ -23,8 +23,14 @@ const HTTP = '/api/notifications';
 
 const WS_URL = ((): string => {
   if (typeof window === 'undefined') return 'ws://localhost:9091';
-  const env = (import.meta as unknown as { env?: { VITE_WS_URL?: string } }).env;
+  const env = (import.meta as unknown as { env?: { VITE_WS_URL?: string; PROD?: boolean } }).env;
   if (env?.VITE_WS_URL) return env.VITE_WS_URL;
+  // Production (single-host OpenShift) serves the notification WebSocket on the
+  // same origin under /ws (nginx upgrades + proxies it to notification-service).
+  if (env?.PROD) {
+    const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    return `${proto}://${window.location.host}/ws`;
+  }
   return `ws://${window.location.hostname}:9091`;
 })();
 

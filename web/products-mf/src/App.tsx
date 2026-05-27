@@ -20,6 +20,9 @@ const styles = {
 const EMPTY_P: ProductForm  = { name: '', sku: '', description: '', weight: 0, categoryId: '' };
 const EMPTY_C: CategoryForm = { name: '', description: '' };
 
+// Capitalize the first letter, leaving the rest untouched.
+const capitalizeFirst = (v: string) => v ? v.charAt(0).toUpperCase() + v.slice(1) : v;
+
 export default function App() {
   const s = useStrings();
   const [products,   setProducts]   = useState<Product[]>([]);
@@ -55,8 +58,14 @@ export default function App() {
 
   async function saveProduct(e: React.FormEvent) {
     e.preventDefault();
+    const payload = {
+      ...pForm,
+      name:        capitalizeFirst(pForm.name.trim()),
+      sku:         capitalizeFirst(pForm.sku.trim()),
+      description: capitalizeFirst(pForm.description.trim()),
+    };
     const url = editP ? `/api/products/${editP.id}` : '/api/products';
-    const r   = await fetch(url, { method: editP ? 'PUT' : 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pForm) });
+    const r   = await fetch(url, { method: editP ? 'PUT' : 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     if (!r.ok) { alert(s.common.saveFailed); return; }
     setShowP(false); void loadProducts();
   }

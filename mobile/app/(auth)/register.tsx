@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, Alert, ActivityIndicator, ScrollView,
+  KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { authApi } from '@/lib/api/auth';
 import { formatApiError } from '@/lib/http/errors';
 import { sl } from '@/constants/i18n';
+import { showToast } from '@/stores/toastStore';
 
 const ROLES = ['MANAGER', 'WORKER'] as const;
 
@@ -36,9 +37,8 @@ export default function RegisterScreen(): React.ReactElement {
     setSubmitError(null);
     try {
       await authApi.register(data);
-      Alert.alert('Uspešno', 'Račun ustvarjen. Prijavite se.', [
-        { text: 'OK', onPress: () => router.replace('/(auth)/login') },
-      ]);
+      showToast(sl.auth.accountCreated, 'success');
+      router.replace('/(auth)/login');
     } catch (err) {
       setSubmitError(formatApiError(err));
     } finally {

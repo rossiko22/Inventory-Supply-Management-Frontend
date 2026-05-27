@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useStrings } from './i18n';
 
-type OrderStatus = 'Requested' | 'Approved' | 'Delivered' | 'Closed';
+type OrderStatus = 'Requested' | 'Approved' | 'Delivered' | 'Closed' | 'Rejected';
 interface Order {
   id: string; productId: string; companyId: string; warehouseId: string;
   driverId: string; quantity: number; status: number; deliveryDate?: string;
@@ -10,9 +10,9 @@ interface Order {
 interface CreateForm { productId: string; companyId: string; warehouseId: string; driverId: string; quantity: number; deliveryDate: string; }
 interface Option { id: string; label: string; }
 
-const STATUS_MAP: Record<number, OrderStatus> = { 0: 'Requested', 1: 'Approved', 2: 'Delivered', 3: 'Closed' };
-const STATUS_NEXT: Record<number, number>      = { 0: 1, 1: 2, 2: 3 };
-const STATUS_COLOR: Record<number, string>     = { 0: '#f59e0b', 1: '#3b82f6', 2: '#10b981', 3: '#64748b' };
+const STATUS_MAP: Record<number, OrderStatus> = { 0: 'Requested', 1: 'Approved', 2: 'Delivered', 3: 'Closed', 4: 'Rejected' };
+const STATUS_NEXT: Record<number, number>      = { 1: 2, 2: 3 };
+const STATUS_COLOR: Record<number, string>     = { 0: '#f59e0b', 1: '#3b82f6', 2: '#10b981', 3: '#64748b', 4: '#dc2626' };
 
 const API = '/api';
 const styles = {
@@ -26,6 +26,29 @@ const styles = {
   select: { padding: '0.5rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: '0.9rem', width: '100%', boxSizing: 'border-box' as const, background: '#fff', cursor: 'pointer' } as React.CSSProperties,
   label:  { display: 'block', fontSize: '0.8rem', color: '#475569', marginBottom: '0.25rem', fontWeight: 500 } as React.CSSProperties,
 };
+
+function useToast() {
+  const [msg, setMsg] = useState<string | null>(null);
+  const [variant, setVariant] = useState<'success' | 'error'>('success');
+  useEffect(() => {
+    if (!msg) return;
+    const t = setTimeout(() => setMsg(null), 2600);
+    return () => clearTimeout(t);
+  }, [msg]);
+  const showToast = (m: string, v: 'success' | 'error' = 'success') => { setVariant(v); setMsg(m); };
+  const toast = msg ? (
+    <div style={{
+      position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)',
+      background: variant === 'success' ? '#16a34a' : '#dc2626', color: '#fff',
+      padding: '0.75rem 1.4rem', borderRadius: 10, boxShadow: '0 8px 30px rgba(0,0,0,.22)',
+      fontSize: '0.9rem', fontWeight: 600, zIndex: 200, animation: 'erpToastIn .28s ease',
+    }}>
+      <style>{'@keyframes erpToastIn{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translate(-50%,0)}}'}</style>
+      {msg}
+    </div>
+  ) : null;
+  return { showToast, toast };
+}
 
 async function fetchOptions<T>(path: string, toOption: (item: T) => Option): Promise<Option[]> {
   try {
@@ -41,6 +64,9 @@ function nameById(options: Option[], id: string) {
 
 export default function App() {
   const s = useStrings();
+  const { showToast, toast } = useToast();
+  const [confirmApprove, setConfirmApprove] = useState<{ order: Order; available: number; capacity: number } | null>(null);
+  const [whCap, setWhCap] = useState<Record<string, { total: number; used: number }>>({});
   const [orders, setOrders]     = useState<Order[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
@@ -71,7 +97,15 @@ export default function App() {
     void load();
     void fetchOptions('/products',   (p: any) => ({ id: p.id, label: `${p.name} (${p.sku})` })).then(setProducts);
     void fetchOptions('/companies',  (c: any) => ({ id: c.id, label: c.name })).then(setCompanies);
-    void fetchOptions('/warehouses', (w: any) => ({ id: w.id, label: `${w.name} — ${w.city}` })).then(setWarehouses);
+    void fetch(`${API}/warehouses`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() as Promise<any[]> : [])
+      .then((ws: any[]) => {
+        setWarehouses(ws.map(w => ({ id: w.id, label: `${w.name} — ${w.city}` })));
+        const m: Record<string, { total: number; used: number }> = {};
+        ws.forEach(w => { m[w.id] = { total: w.totalCapacity, used: w.usedCapacity }; });
+        setWhCap(m);
+      })
+      .catch(() => {});
     void fetchOptions('/drivers',    (d: any) => ({ id: d.id, label: d.name })).then(setDrivers);
   }, []);
 
@@ -89,6 +123,41 @@ export default function App() {
   async function setStatus(orderId: string, status: number) {
     const r = await fetch(`${API}/orders/status`, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId, status }) });
     if (!r.ok) throw new Error('Status update failed');
+  }
+
+  // Approve flow: warn when the order won't fit the warehouse's free capacity,
+  // but allow the manager to approve anyway (capacity may go over total).
+  function requestApprove(order: Order) {
+    const cap = whCap[order.warehouseId];
+    const available = cap ? cap.total - cap.used : Number.POSITIVE_INFINITY;
+    if (order.quantity > available) {
+      setConfirmApprove({ order, available, capacity: cap ? cap.total : 0 });
+    } else {
+      void doApprove(order);
+    }
+  }
+
+  async function doApprove(order: Order) {
+    setConfirmApprove(null);
+    try {
+      await setStatus(order.id, 1);
+      showToast(s.orders.approvedToast, 'success');
+      void load();
+    } catch (e) { showToast(String(e), 'error'); }
+  }
+
+  function requestReject(order: Order) {
+    if (!confirm(s.orders.rejectConfirm)) return;
+    void doReject(order);
+  }
+
+  async function doReject(order: Order) {
+    setConfirmApprove(null);
+    try {
+      await setStatus(order.id, 4);
+      showToast(s.orders.rejectedToast, 'success');
+      void load();
+    } catch (e) { showToast(String(e), 'error'); }
   }
 
   async function advanceStatus(order: Order) {
@@ -197,6 +266,16 @@ export default function App() {
                 <td style={styles.td}>{o.deliveryDate ? o.deliveryDate.slice(0, 10) : '—'}</td>
                 <td style={styles.td}>
                   <button style={{ ...styles.btn, background: '#f1f5f9', color: '#334155', marginRight: '0.4rem' }} onClick={() => void openDetail(o.id)}>{s.orders.view}</button>
+                  {o.status === 0 && (
+                    <>
+                      <button style={{ ...styles.btn, background: '#dcfce7', color: '#15803d', marginRight: '0.4rem' }} onClick={() => requestApprove(o)}>
+                        ✓ {s.orders.approve}
+                      </button>
+                      <button style={{ ...styles.btn, background: '#fef2f2', color: '#dc2626' }} onClick={() => requestReject(o)}>
+                        ✕ {s.orders.doNotApprove}
+                      </button>
+                    </>
+                  )}
                   {STATUS_NEXT[o.status] !== undefined && (
                     o.status === 2 ? (
                       <button style={{ ...styles.btn, background: '#ede9fe', color: '#6d28d9' }} onClick={() => advanceStatus(o)}>
@@ -312,6 +391,28 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Over-capacity approval confirmation */}
+      {confirmApprove && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 80 }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: 460, boxShadow: '0 8px 40px rgba(0,0,0,.15)' }}>
+            <h2 style={{ fontWeight: 700, marginBottom: '0.6rem', color: '#b45309' }}>⚠ {s.orders.capacityWarnTitle}</h2>
+            <p style={{ color: '#475569', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+              {s.orders.capacityWarnBody
+                .replace('{qty}', String(confirmApprove.order.quantity))
+                .replace('{available}', String(Math.max(0, confirmApprove.available)))
+                .replace('{capacity}', String(confirmApprove.capacity))}
+            </p>
+            <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <button style={{ ...styles.btn, background: '#e2e8f0', color: '#334155' }} onClick={() => setConfirmApprove(null)}>{s.common.cancel}</button>
+              <button style={{ ...styles.btn, background: '#fef2f2', color: '#dc2626' }} onClick={() => void doReject(confirmApprove.order)}>✕ {s.orders.doNotApprove}</button>
+              <button style={{ ...styles.btn, background: '#15803d', color: '#fff' }} onClick={() => void doApprove(confirmApprove.order)}>✓ {s.orders.approveAnyway}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast}
     </div>
   );
 }

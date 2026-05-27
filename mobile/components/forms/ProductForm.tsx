@@ -17,6 +17,9 @@ export interface ProductFormValues {
   categoryId:  string;
 }
 
+// Capitalize the first letter, leaving the rest untouched.
+const capitalizeFirst = (v: string) => v ? v.charAt(0).toUpperCase() + v.slice(1) : v;
+
 interface Props {
   initial?: ProductResponse;
   submitting: boolean;
@@ -102,7 +105,7 @@ export function ProductForm({ initial, submitting, submitError, onSubmit, onCanc
         <TouchableOpacity
           style={[styles.submitBtn, (!canSubmit || submitting) && styles.submitBtnDisabled]}
           disabled={!canSubmit || submitting}
-          onPress={() => onSubmit({ name: name.trim(), sku: sku.trim(), description: description.trim(), weight: weightNum, categoryId })}
+          onPress={() => onSubmit({ name: capitalizeFirst(name.trim()), sku: capitalizeFirst(sku.trim()), description: capitalizeFirst(description.trim()), weight: weightNum, categoryId })}
         >
           {submitting
             ? <ActivityIndicator color="#fff" />

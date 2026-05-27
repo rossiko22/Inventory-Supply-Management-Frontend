@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useStrings } from './i18n';
+import { useStrings, useLocale, setLocale } from './i18n';
+import { LOCALES, LOCALE_LABEL, type Locale } from '@erp/i18n';
 
 interface AuthUser { id: string; email: string; name: string; role: 'MANAGER' | 'WORKER'; }
 interface Props { onLogin?: (user: AuthUser) => void; }
@@ -31,6 +32,7 @@ const label: React.CSSProperties = { display: 'block', fontSize: '0.875rem', col
 
 export default function App({ onLogin }: Props) {
   const s = useStrings();
+  const locale = useLocale();
   const [mode, setMode]         = useState<Mode>('login');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -97,6 +99,26 @@ export default function App({ onLogin }: Props) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9' }}>
       <div style={card}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.25rem', marginBottom: '0.75rem' }}>
+          {LOCALES.map((l: Locale) => {
+            const active = l === locale;
+            return (
+              <button
+                key={l}
+                type="button"
+                onClick={() => setLocale(l)}
+                title={LOCALE_LABEL[l]}
+                style={{
+                  padding: '0.3rem 0.6rem', borderRadius: 6, border: 'none', cursor: 'pointer',
+                  background: active ? '#3b82f6' : '#e2e8f0', color: active ? '#fff' : '#475569',
+                  fontSize: '0.75rem', fontWeight: active ? 700 : 500, textTransform: 'uppercase',
+                }}
+              >
+                {l}
+              </button>
+            );
+          })}
+        </div>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem', color: '#1e293b' }}>
           {s.auth.appTitle}
         </h1>

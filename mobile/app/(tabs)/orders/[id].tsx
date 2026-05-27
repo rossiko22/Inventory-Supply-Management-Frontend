@@ -15,6 +15,7 @@ import { ErrorView } from '@/components/ui/ErrorView';
 import { RoleGate } from '@/components/RoleGate';
 import { UploadCloseModal } from '@/components/orders/UploadCloseModal';
 import { formatApiError } from '@/lib/http/errors';
+import { showToast } from '@/stores/toastStore';
 import { NEXT_STATUS, canAdvance, ORDER_STATUS_VALUES, type OrderStatus } from '@erp/domain';
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
@@ -22,6 +23,7 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   Approved:  '#3b82f6',
   Delivered: '#10b981',
   Closed:    '#64748b',
+  Rejected:  '#dc2626',
 };
 
 export default function OrderDetailScreen(): React.ReactElement {
@@ -58,6 +60,38 @@ export default function OrderDetailScreen(): React.ReactElement {
   const color = STATUS_COLORS[data.status];
   const next  = NEXT_STATUS[data.status];
 
+  const isRequested = data.status === 'Requested';
+  const warehouse   = warehouses?.find((w) => w.id === data.warehouseId);
+  const available   = warehouse ? warehouse.totalCapacity - warehouse.usedCapacity : Number.POSITIVE_INFINITY;
+
+  const doApprove = () =>
+    statusMutation.mutate('Approved', { onSuccess: () => showToast(sl.orders.approvedToast, 'success') });
+  const doReject = () =>
+    statusMutation.mutate('Rejected', { onSuccess: () => showToast(sl.orders.rejectedToast, 'success') });
+
+  const onRejectPress = () => {
+    Alert.alert(sl.orders.doNotApprove, sl.orders.rejectConfirm, [
+      { text: sl.common.cancel,       style: 'cancel' },
+      { text: sl.orders.doNotApprove, style: 'destructive', onPress: doReject },
+    ]);
+  };
+
+  const onApprovePress = () => {
+    if (data.quantity > available) {
+      const body = sl.orders.capacityWarnBody
+        .replace('{qty}', String(data.quantity))
+        .replace('{available}', String(Math.max(0, available)))
+        .replace('{capacity}', String(warehouse ? warehouse.totalCapacity : 0));
+      Alert.alert(sl.orders.capacityWarnTitle, body, [
+        { text: sl.common.cancel,       style: 'cancel' },
+        { text: sl.orders.doNotApprove, style: 'destructive', onPress: doReject },
+        { text: sl.orders.approveAnyway, onPress: doApprove },
+      ]);
+    } else {
+      doApprove();
+    }
+  };
+
   const confirmAdvance = (target: OrderStatus) => {
     // Delivered -> Closed: require a delivery document upload first, matching
     // the web orders-mf flow.
@@ -79,7 +113,7 @@ export default function OrderDetailScreen(): React.ReactElement {
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.headerBtn}>← Nazaj</Text>
+          <Text style={styles.headerBtn}>← {sl.common.back}</Text>
         </TouchableOpacity>
         <Text style={styles.title} numberOfLines={1}>#{data.id.slice(0, 8)}</Text>
         <View style={{ width: 60 }} />
@@ -97,9 +131,30 @@ export default function OrderDetailScreen(): React.ReactElement {
         <Field label={sl.orders.company}      value={nameById(companies,  data.companyId)} />
         <Field label={sl.orders.driver}       value={nameById(drivers,    data.driverId)} />
         <Field label={sl.orders.deliveryDate} value={data.deliveryDate ? new Date(data.deliveryDate).toLocaleString('sl-SI') : '—'} />
-        <Field label="Ustvarjeno"             value={new Date(data.createdAt).toLocaleString('sl-SI')} />
+        <Field label={sl.orders.created}      value={new Date(data.createdAt).toLocaleString('sl-SI')} />
 
-        {canAdvance(data.status) && next && (
+        {isRequested && (
+          <RoleGate feature="ORDERS_STATUS_UPDATE">
+            <View style={styles.approveRow}>
+              <TouchableOpacity
+                style={[styles.rejectBtn, statusMutation.isPending && styles.btnDisabled]}
+                onPress={onRejectPress}
+                disabled={statusMutation.isPending}
+              >
+                <Text style={styles.rejectBtnText}>✕ {sl.orders.doNotApprove}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.approveBtn, statusMutation.isPending && styles.btnDisabled]}
+                onPress={onApprovePress}
+                disabled={statusMutation.isPending}
+              >
+                <Text style={styles.approveBtnText}>✓ {sl.orders.approve}</Text>
+              </TouchableOpacity>
+            </View>
+          </RoleGate>
+        )}
+
+        {!isRequested && canAdvance(data.status) && next && (
           <RoleGate feature="ORDERS_STATUS_UPDATE">
             <TouchableOpacity
               style={[styles.advBtn, statusMutation.isPending && styles.btnDisabled]}
@@ -146,4 +201,9 @@ const styles = StyleSheet.create({
   advBtn:      { marginTop: 12, backgroundColor: '#3b82f6', borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
   advBtnText:  { color: '#fff', fontSize: 15, fontWeight: '700' },
   btnDisabled: { opacity: 0.5 },
+  approveRow:    { flexDirection: 'row', gap: 8, marginTop: 12 },
+  approveBtn:    { flex: 1, backgroundColor: '#16a34a', borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
+  approveBtnText:{ color: '#fff', fontSize: 15, fontWeight: '700' },
+  rejectBtn:     { flex: 1, backgroundColor: '#fff', borderRadius: 10, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: '#fecaca' },
+  rejectBtnText: { color: '#dc2626', fontSize: 15, fontWeight: '700' },
 });

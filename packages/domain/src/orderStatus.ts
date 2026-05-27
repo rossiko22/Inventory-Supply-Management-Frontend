@@ -4,15 +4,16 @@
 // here rather than in @erp/api-types (which is types-only). DTOs that carry a
 // status import the `OrderStatus` type from here.
 
-export type OrderStatus = 'Requested' | 'Approved' | 'Delivered' | 'Closed';
+export type OrderStatus = 'Requested' | 'Approved' | 'Delivered' | 'Closed' | 'Rejected';
 
 // Mobile uses PUT /orders/:id/status { status: number }.
-// Numeric mapping matches the C# enum ordinal: Requested=0 … Closed=3.
+// Numeric mapping matches the C# enum ordinal: Requested=0 … Closed=3, Rejected=4.
 export const ORDER_STATUS_VALUES: Record<OrderStatus, number> = {
   Requested: 0,
   Approved:  1,
   Delivered: 2,
   Closed:    3,
+  Rejected:  4,
 };
 
 // Inverse map — backend serialises the enum as a number on responses, so the
@@ -22,6 +23,7 @@ export const ORDER_STATUS_NAMES: Record<number, OrderStatus> = {
   1: 'Approved',
   2: 'Delivered',
   3: 'Closed',
+  4: 'Rejected',
 };
 
 // One-step forward transitions. A status with no entry is terminal.

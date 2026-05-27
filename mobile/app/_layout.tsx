@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useLocaleStore } from '@/lib/i18n/locale';
 import { useOfflineState } from '@/hooks/useOfflineState';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
+import { ToastHost } from '@/components/ui/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const queryClient = new QueryClient({
@@ -66,6 +67,7 @@ export default function RootLayout(): React.ReactElement {
                 <Stack.Screen name="(tabs)"  options={{ headerShown: false }} />
               </Stack>
             </View>
+            <ToastHost />
           </View>
         </QueryClientProvider>
       </SafeAreaProvider>
