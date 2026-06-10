@@ -25,6 +25,10 @@ const en: Strings = {
     fullName:           'Full name',
     signingIn:          'Signing in…',
     creating:           'Creating…',
+    emailInvalid:       'Enter a valid email address.',
+    passwordRequired:   'Password is required.',
+    passwordMin:        'Password must be at least 6 characters.',
+    nameRequired:       'Name is required.',
   },
   tabs: {
     home:          'Home',
@@ -61,8 +65,8 @@ const en: Strings = {
   },
   stock: {
     title:        'Stock',
-    addStock:     'Add stock',
     consumeStock: 'Consume stock',
+    stockFromOrders: 'Stock is created when an order is closed.',
     product:      'Product',
     warehouse:    'Warehouse',
     quantity:     'Quantity',
@@ -218,6 +222,18 @@ const en: Strings = {
     pendingBackend:'Feature waiting on backend update.',
     manualEntry:   'Manual SKU entry',
     openProduct:   'Open product',
+    scanAgain:     'Scan again',
+    checking:      'Checking…',
+    productExists: 'A product with this SKU already exists.',
+    addProduct:    'Add product',
+    categoryMissingTitle: 'Category does not exist',
+    categoryMissingBody:  'Category “{category}” does not exist.',
+    openCategories: 'Open categories',
+    createCategory: 'Create category',
+    saving:        'Saving…',
+    productAdded:  'Product added.',
+    categoryCreated: 'Category created.',
+    noCategoryInQr: 'QR code must include a category.',
   },
   ai: {
     title:        'AI Analysis',
@@ -275,6 +291,7 @@ const en: Strings = {
     yes:          'Yes',
     no:           'No',
     selectPlaceholder: '— select —',
+    accessDenied: 'Access denied.',
   },
 };
 

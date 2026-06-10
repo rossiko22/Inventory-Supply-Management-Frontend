@@ -35,7 +35,7 @@ export default function FleetScreen(): React.ReactElement {
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.back}>← Nazaj</Text>
+          <Text style={styles.back}>← {sl.common.back}</Text>
         </TouchableOpacity>
         <Text style={styles.title}>{sl.fleet.title}</Text>
         <RoleGate feature="FLEET_WRITE">

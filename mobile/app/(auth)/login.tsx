@@ -15,10 +15,19 @@ import { useLocaleStore } from '@/lib/i18n/locale';
 import { LOCALES, LOCALE_LABEL, type Locale } from '@erp/i18n';
 
 const schema = z.object({
-  email:    z.string().email('Vnesite veljavno e-poštno naslov'),
-  password: z.string().min(1, 'Geslo je obvezno'),
+  email:    z.string().email('auth.emailInvalid'),
+  password: z.string().min(1, 'auth.passwordRequired'),
 });
 type FormData = z.infer<typeof schema>;
+
+// Validation messages are stored as i18n keys ("auth.emailInvalid") in the
+// schema so the schema stays module-level; we resolve the key to the active
+// locale's text at render time.
+function msg(key: string | undefined): string | undefined {
+  if (key === 'auth.emailInvalid')     return sl.auth.emailInvalid;
+  if (key === 'auth.passwordRequired') return sl.auth.passwordRequired;
+  return key;
+}
 
 export default function LoginScreen(): React.ReactElement {
   const router   = useRouter();
@@ -87,7 +96,7 @@ export default function LoginScreen(): React.ReactElement {
             />
           )}
         />
-        {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
+        {errors.email && <Text style={styles.error}>{msg(errors.email.message)}</Text>}
 
         <Text style={styles.label}>{sl.auth.password}</Text>
         <Controller
@@ -103,7 +112,7 @@ export default function LoginScreen(): React.ReactElement {
             />
           )}
         />
-        {errors.password && <Text style={styles.error}>{errors.password.message}</Text>}
+        {errors.password && <Text style={styles.error}>{msg(errors.password.message)}</Text>}
 
         {submitError && (
           <View style={styles.submitError} accessibilityRole="alert">

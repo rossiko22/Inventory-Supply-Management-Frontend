@@ -42,6 +42,20 @@ export default function OrderDetailScreen(): React.ReactElement {
   const { data: warehouses } = useQuery({ queryKey: queryKeys.warehouses, queryFn: warehousesApi.getAll });
   const { data: drivers }    = useQuery({ queryKey: queryKeys.drivers,    queryFn: fleetApi.getAllDrivers });
 
+  // Resolve the exact product/warehouse referenced by this order directly by
+  // ID, so the name shows even when the entity isn't in the cached list
+  // (deleted, paginated, or not yet loaded). Falls back to the list lookup.
+  const { data: productInfo } = useQuery({
+    queryKey: queryKeys.productDetail(data?.productId ?? ''),
+    queryFn:  () => productsApi.getById(data!.productId),
+    enabled:  !!data?.productId,
+  });
+  const { data: warehouseInfo } = useQuery({
+    queryKey: queryKeys.warehouseDetail(data?.warehouseId ?? ''),
+    queryFn:  () => warehousesApi.getById(data!.warehouseId),
+    enabled:  !!data?.warehouseId,
+  });
+
   const nameById = (list: { id: string; name: string }[] | undefined, fkId: string): string =>
     list?.find((x) => x.id === fkId)?.name ?? `${fkId.slice(0, 8)}…`;
 
@@ -126,8 +140,8 @@ export default function OrderDetailScreen(): React.ReactElement {
         </View>
 
         <Field label={sl.orders.quantity}     value={String(data.quantity)} />
-        <Field label={sl.orders.product}      value={nameById(products,   data.productId)} />
-        <Field label={sl.orders.warehouse}    value={nameById(warehouses, data.warehouseId)} />
+        <Field label={sl.orders.product}      value={productInfo?.name   ?? nameById(products,   data.productId)} />
+        <Field label={sl.orders.warehouse}    value={warehouseInfo?.name ?? nameById(warehouses, data.warehouseId)} />
         <Field label={sl.orders.company}      value={nameById(companies,  data.companyId)} />
         <Field label={sl.orders.driver}       value={nameById(drivers,    data.driverId)} />
         <Field label={sl.orders.deliveryDate} value={data.deliveryDate ? new Date(data.deliveryDate).toLocaleString('sl-SI') : '—'} />

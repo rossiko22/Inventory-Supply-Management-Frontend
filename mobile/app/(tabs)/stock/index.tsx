@@ -75,7 +75,7 @@ export default function StockScreen(): React.ReactElement {
   const items = stockQuery.data ?? [];
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={styles.root} edges={['left','right','bottom']}>
       {/* Warehouse filter chips */}
       <View style={styles.filterRow}>
         <TouchableOpacity
@@ -110,14 +110,7 @@ export default function StockScreen(): React.ReactElement {
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>📦</Text>
             <Text style={styles.empty}>{sl.stock.noItems}</Text>
-            <RoleGate feature="INVENTORY_WRITE">
-              <TouchableOpacity
-                style={styles.emptyCta}
-                onPress={() => router.push('/(tabs)/stock/add')}
-              >
-                <Text style={styles.emptyCtaText}>{sl.stock.addStock}</Text>
-              </TouchableOpacity>
-            </RoleGate>
+            <Text style={styles.emptyHint}>{sl.stock.stockFromOrders}</Text>
           </View>
         }
         renderItem={({ item }) => (
@@ -131,20 +124,14 @@ export default function StockScreen(): React.ReactElement {
         )}
       />
 
-      {/* Action FABs — INVENTORY_WRITE gated. Consume (issue stock) is the
-          secondary pill stacked above the primary add FAB. */}
+      {/* Stock only grows when an order is closed (delivery acknowledged), so
+          the only manual action here is consuming (issuing) existing stock. */}
       <RoleGate feature="INVENTORY_WRITE">
         <TouchableOpacity
           style={styles.consumeFab}
           onPress={() => router.push('/(tabs)/stock/consume')}
         >
           <Text style={styles.consumeFabText}>{sl.stock.consumeStock}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={() => router.push('/(tabs)/stock/add')}
-        >
-          <Text style={styles.fabText}>＋</Text>
         </TouchableOpacity>
       </RoleGate>
 
@@ -282,8 +269,7 @@ const styles = StyleSheet.create({
   emptyState:     { alignItems: 'center', gap: 12 },
   emptyIcon:      { fontSize: 48 },
   empty:          { color: '#94a3b8', fontSize: 14 },
-  emptyCta:       { marginTop: 4, backgroundColor: '#3b82f6', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
-  emptyCtaText:   { color: '#fff', fontWeight: '600', fontSize: 13 },
+  emptyHint:      { marginTop: 4, color: '#64748b', fontSize: 12, textAlign: 'center', paddingHorizontal: 24, lineHeight: 18 },
   card:           { backgroundColor: '#fff', borderRadius: 12, padding: 14, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
   cardLow:        { borderLeftWidth: 3, borderLeftColor: '#dc2626' },
   cardHeader:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
@@ -295,9 +281,7 @@ const styles = StyleSheet.create({
   quantityLabel:  { fontSize: 11, color: '#94a3b8' },
   cardAction:     { alignSelf: 'flex-start', marginTop: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: '#dbeafe' },
   cardActionText: { color: '#3b82f6', fontSize: 12, fontWeight: '600' },
-  fab:            { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: '#3b82f6', justifyContent: 'center', alignItems: 'center', elevation: 6, shadowColor: '#3b82f6', shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } },
-  fabText:        { color: '#fff', fontSize: 28, fontWeight: '300', lineHeight: 32 },
-  consumeFab:     { position: 'absolute', bottom: 92, right: 24, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 24, backgroundColor: '#6d28d9', justifyContent: 'center', alignItems: 'center', elevation: 5, shadowColor: '#6d28d9', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 3 } },
+  consumeFab:     { position: 'absolute', bottom: 24, right: 24, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 24, backgroundColor: '#3b82f6', justifyContent: 'center', alignItems: 'center', elevation: 5, shadowColor: '#3b82f6', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 3 } },
   consumeFabText: { color: '#fff', fontWeight: '700', fontSize: 13 },
   // Modal
   modalBackdrop:  { flex: 1, backgroundColor: 'rgba(15,23,42,0.45)', alignItems: 'center', justifyContent: 'center', padding: 24 },

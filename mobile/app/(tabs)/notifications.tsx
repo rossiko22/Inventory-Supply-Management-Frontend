@@ -53,7 +53,7 @@ export default function NotificationsScreen(): React.ReactElement {
   const items = data ?? [];
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={styles.root} edges={['left','right','bottom']}>
       <View style={styles.statusBar}>
         <View style={[styles.statusDot, { backgroundColor: connected ? '#10b981' : fallbackActive ? '#f59e0b' : '#94a3b8' }]} />
         <Text style={styles.statusText}>

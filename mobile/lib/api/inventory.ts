@@ -1,5 +1,5 @@
 import { axiosClient } from '@/lib/http/client';
-import type { InventoryResponse, CreateInventoryRequest } from '@erp/api-types';
+import type { InventoryResponse } from '@erp/api-types';
 
 export interface UpdateThresholdsRequest {
   productId:    string;
@@ -9,6 +9,9 @@ export interface UpdateThresholdsRequest {
 }
 
 // Mobile-gateway serves /stock/* and rewrites to /inventory/* downstream.
+// Stock is only ever created server-side (via order closure), so there's no
+// addStock here on purpose — the mobile screens expose consume + threshold
+// edits only.
 export const inventoryApi = {
   getAll: async (): Promise<InventoryResponse[]> => {
     const res = await axiosClient.get<InventoryResponse[]>('/stock');
@@ -17,11 +20,6 @@ export const inventoryApi = {
 
   getByWarehouse: async (warehouseId: string): Promise<InventoryResponse[]> => {
     const res = await axiosClient.get<InventoryResponse[]>(`/stock/${warehouseId}`);
-    return res.data;
-  },
-
-  addStock: async (body: CreateInventoryRequest): Promise<InventoryResponse> => {
-    const res = await axiosClient.post<InventoryResponse>('/stock', body);
     return res.data;
   },
 

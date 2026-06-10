@@ -53,7 +53,7 @@ export default function WarehouseDetailScreen(): React.ReactElement {
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.headerBtn}>← Nazaj</Text>
+          <Text style={styles.headerBtn}>← {sl.common.back}</Text>
         </TouchableOpacity>
         <Text style={styles.title} numberOfLines={1}>{data.name}</Text>
         <View style={{ width: 60 }} />

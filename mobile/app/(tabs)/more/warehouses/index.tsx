@@ -27,7 +27,7 @@ export default function WarehousesScreen(): React.ReactElement {
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.back}>← Nazaj</Text>
+          <Text style={styles.back}>← {sl.common.back}</Text>
         </TouchableOpacity>
         <Text style={styles.title}>{sl.warehouses.title}</Text>
         <RoleGate feature="WAREHOUSES_WRITE">

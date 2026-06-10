@@ -14,20 +14,23 @@ interface MenuEntry {
   feature?: Parameters<typeof useHasFeature>[0];
 }
 
-const MENU_ENTRIES: MenuEntry[] = [
-  { label: sl.products.title,    icon: 'cube-outline',        route: '/(tabs)/more/products',    feature: 'PRODUCTS_READ' },
-  { label: sl.warehouses.title,  icon: 'business-outline',    route: '/(tabs)/more/warehouses',  feature: 'WAREHOUSES_READ' },
-  { label: sl.fleet.title,       icon: 'car-outline',         route: '/(tabs)/more/fleet',       feature: 'FLEET_READ' },
-  { label: sl.companies.title,   icon: 'briefcase-outline',   route: '/(tabs)/more/companies',   feature: 'COMPANIES_READ' },
-  { label: sl.scanner.title,     icon: 'barcode-outline',     route: '/(tabs)/more/scanner',     feature: 'SCANNER' },
-  { label: sl.ai.title,          icon: 'sparkles-outline',    route: '/(tabs)/more/ai',          feature: 'AI_ANALYSIS' },
-  { label: sl.profile.title,     icon: 'person-circle-outline', route: '/(tabs)/more/profile' },
-];
-
 export default function MoreScreen(): React.ReactElement {
   const router = useRouter();
   const user   = useAuthStore((s) => s.user);
   const role   = useAuthStore((s) => s.role);
+
+  // Build the menu inside render so each label is resolved against the active
+  // locale through the `sl` proxy. A module-level array would freeze the
+  // labels at whichever locale was active when this module first loaded.
+  const menuEntries: MenuEntry[] = [
+    { label: sl.products.title,    icon: 'cube-outline',          route: '/(tabs)/more/products',    feature: 'PRODUCTS_READ'   },
+    { label: sl.warehouses.title,  icon: 'business-outline',      route: '/(tabs)/more/warehouses',  feature: 'WAREHOUSES_READ' },
+    { label: sl.fleet.title,       icon: 'car-outline',           route: '/(tabs)/more/fleet',       feature: 'FLEET_READ'      },
+    { label: sl.companies.title,   icon: 'briefcase-outline',     route: '/(tabs)/more/companies',   feature: 'COMPANIES_READ'  },
+    { label: sl.scanner.title,     icon: 'barcode-outline',       route: '/(tabs)/more/scanner',     feature: 'SCANNER'         },
+    { label: sl.ai.title,          icon: 'sparkles-outline',      route: '/(tabs)/more/ai',          feature: 'AI_ANALYSIS'     },
+    { label: sl.profile.title,     icon: 'person-circle-outline', route: '/(tabs)/more/profile'                                 },
+  ];
 
   return (
     <SafeAreaView style={styles.root}>
@@ -45,7 +48,7 @@ export default function MoreScreen(): React.ReactElement {
 
         {/* Menu */}
         <View style={styles.menu}>
-          {MENU_ENTRIES.map((entry) => (
+          {menuEntries.map((entry) => (
             <MenuRow key={entry.route} entry={entry} onPress={() => router.push(entry.route as any)} />
           ))}
         </View>

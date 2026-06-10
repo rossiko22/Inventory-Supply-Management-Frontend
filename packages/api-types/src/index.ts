@@ -91,14 +91,6 @@ export interface InventoryResponse {
   maxQuantity?: number | null;
 }
 
-export interface CreateInventoryRequest {
-  warehouseId:  string;
-  productId:    string;
-  quantity:     number;
-  minQuantity?: number | null;
-  maxQuantity?: number | null;
-}
-
 // ─── Products ────────────────────────────────────────────────────────────────
 
 export interface ProductResponse {

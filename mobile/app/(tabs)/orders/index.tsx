@@ -67,7 +67,7 @@ export default function OrdersScreen(): React.ReactElement {
   const orders = filter ? (data ?? []).filter((o) => o.status === filter) : (data ?? []);
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={styles.root} edges={['left','right','bottom']}>
       {/* Status filter */}
       <View style={styles.filterRow}>
         {([null, 'Requested', 'Approved', 'Delivered', 'Closed', 'Rejected'] as (OrderStatus | null)[]).map((s) => (

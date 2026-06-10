@@ -20,6 +20,7 @@ import { warehousesApi } from '@/lib/api/warehouses';
 import { productsApi } from '@/lib/api/products';
 import { queryKeys } from '@erp/domain';
 import { sl } from '@/constants/i18n';
+import { DatePickerField } from '@/components/ui/DatePickerField';
 import { LoadingView } from '@/components/ui/LoadingView';
 import { ErrorView } from '@/components/ui/ErrorView';
 import { formatApiError } from '@/lib/http/errors';
@@ -182,13 +183,11 @@ export default function ConsumeStockScreen(): React.ReactElement {
         />
 
         <Text style={styles.section}>{sl.stock.dateOfUsage}</Text>
-        <TextInput
-          style={styles.input}
+        <DatePickerField
           value={dateOfUsage}
-          onChangeText={setDateOfUsage}
-          placeholder="YYYY-MM-DD"
-          autoCapitalize="none"
-          autoCorrect={false}
+          onChange={setDateOfUsage}
+          placeholder={sl.common.selectPlaceholder}
+          maximumDate={new Date()}
         />
 
         <Text style={styles.section}>{sl.stock.description}</Text>

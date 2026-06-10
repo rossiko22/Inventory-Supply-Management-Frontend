@@ -43,9 +43,13 @@ function AuthGuard(): null {
 
 export default function RootLayout(): React.ReactElement {
   const setReady = useAuthStore((s) => s.setReady);
-  // Subscribe so the whole tree re-renders when the user toggles language;
-  // the `sl` proxy then resolves into the new locale on every access.
-  useLocaleStore((s) => s.locale);
+  // Keying the navigator on the active locale remounts the whole screen tree
+  // when the user toggles language. A plain re-render isn't enough: React
+  // Navigation memoizes already-mounted screens, so titles and visible screen
+  // bodies that read the `sl` proxy would keep the previous language until you
+  // navigate away and back. The remount forces every screen to re-resolve the
+  // proxy into the new locale at once.
+  const locale = useLocaleStore((s) => s.locale);
   const { online } = useOfflineState();
 
   // Mark hydration complete after first render (zustand/persist rehydrates synchronously
@@ -61,7 +65,7 @@ export default function RootLayout(): React.ReactElement {
           <AuthGuard />
           <View style={{ flex: 1 }}>
             <OfflineBanner visible={!online} />
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1 }} key={locale}>
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="(auth)"  options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)"  options={{ headerShown: false }} />

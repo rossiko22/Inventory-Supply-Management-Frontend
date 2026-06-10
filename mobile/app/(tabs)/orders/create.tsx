@@ -18,6 +18,7 @@ import { fleetApi } from '@/lib/api/fleet';
 import { queryKeys } from '@erp/domain';
 import { formatApiError } from '@/lib/http/errors';
 import { sl } from '@/constants/i18n';
+import { DatePickerField } from '@/components/ui/DatePickerField';
 
 export default function CreateOrderScreen(): React.ReactElement {
   const router      = useRouter();
@@ -29,6 +30,14 @@ export default function CreateOrderScreen(): React.ReactElement {
   const [driverId,     setDriverId]     = useState('');
   const [quantity,     setQuantity]     = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
+
+  // Delivery can be scheduled from today up to one year ahead.
+  const today        = React.useMemo(() => new Date(), []);
+  const oneYearAhead = React.useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return d;
+  }, []);
 
   const { data: products }   = useQuery({ queryKey: queryKeys.products,   queryFn: productsApi.getAll });
   const { data: warehouses } = useQuery({ queryKey: queryKeys.warehouses, queryFn: warehousesApi.getAll });
@@ -102,13 +111,12 @@ export default function CreateOrderScreen(): React.ReactElement {
         </Field>
 
         <Field label={sl.orders.deliveryDate}>
-          <TextInput
-            style={styles.input}
+          <DatePickerField
             value={deliveryDate}
-            onChangeText={setDeliveryDate}
-            placeholder="YYYY-MM-DD"
-            autoCapitalize="none"
-            autoCorrect={false}
+            onChange={setDeliveryDate}
+            placeholder={sl.common.selectPlaceholder}
+            minimumDate={today}
+            maximumDate={oneYearAhead}
           />
         </Field>
 

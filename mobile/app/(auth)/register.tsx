@@ -15,12 +15,21 @@ import { showToast } from '@/stores/toastStore';
 const ROLES = ['MANAGER', 'WORKER'] as const;
 
 const schema = z.object({
-  name:     z.string().min(1, 'Ime je obvezno'),
-  email:    z.string().email('Vnesite veljavno e-poštno naslov'),
-  password: z.string().min(6, 'Geslo mora imeti vsaj 6 znakov'),
+  name:     z.string().min(1, 'auth.nameRequired'),
+  email:    z.string().email('auth.emailInvalid'),
+  password: z.string().min(6, 'auth.passwordMin'),
   role:     z.enum(ROLES),
 });
 type FormData = z.infer<typeof schema>;
+
+// Validation messages are stored as i18n keys so the schema can stay
+// module-level; resolve to the active locale's text at render time.
+function msg(key: string | undefined): string | undefined {
+  if (key === 'auth.nameRequired') return sl.auth.nameRequired;
+  if (key === 'auth.emailInvalid') return sl.auth.emailInvalid;
+  if (key === 'auth.passwordMin')  return sl.auth.passwordMin;
+  return key;
+}
 
 export default function RegisterScreen(): React.ReactElement {
   const router  = useRouter();
@@ -65,7 +74,7 @@ export default function RegisterScreen(): React.ReactElement {
                 value={value} onChangeText={onChange} autoCapitalize="words" />
             )}
           />
-          {errors.name && <Text style={styles.error}>{errors.name.message}</Text>}
+          {errors.name && <Text style={styles.error}>{msg(errors.name.message)}</Text>}
 
           <Text style={styles.label}>{sl.auth.email}</Text>
           <Controller
@@ -77,7 +86,7 @@ export default function RegisterScreen(): React.ReactElement {
                 keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
             )}
           />
-          {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
+          {errors.email && <Text style={styles.error}>{msg(errors.email.message)}</Text>}
 
           <Text style={styles.label}>{sl.auth.password}</Text>
           <Controller
@@ -88,7 +97,7 @@ export default function RegisterScreen(): React.ReactElement {
                 value={value} onChangeText={onChange} secureTextEntry autoCorrect={false} />
             )}
           />
-          {errors.password && <Text style={styles.error}>{errors.password.message}</Text>}
+          {errors.password && <Text style={styles.error}>{msg(errors.password.message)}</Text>}
 
           <Text style={styles.label}>{sl.auth.role}</Text>
           <Controller

@@ -5,11 +5,16 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { CameraView } from 'expo-camera';
 import { useBarcode } from '@/lib/scanner/useBarcode';
 import { resolveScannedCode } from '@/lib/scanner/resolveScannedCode';
+import { parseProductPayload, type ScannedProduct } from '@/lib/scanner/parseProductPayload';
+import { productsApi } from '@/lib/api/products';
+import { queryKeys } from '@erp/domain';
 import { sl } from '@/constants/i18n';
+import { formatApiError } from '@/lib/http/errors';
+import { showToast } from '@/stores/toastStore';
 import type { ProductResponse } from '@erp/api-types';
 
 type LookupState =
@@ -17,6 +22,11 @@ type LookupState =
   | { kind: 'searching'; sku: string }
   | { kind: 'found'; product: ProductResponse }
   | { kind: 'notFound'; sku: string }
+  | { kind: 'checking'; sku: string }
+  | { kind: 'productExists'; sku: string; name: string }
+  | { kind: 'categoryMissing'; product: ScannedProduct; category: string }
+  | { kind: 'productReady'; product: ScannedProduct; categoryId: string }
+  | { kind: 'saving' }
   | { kind: 'error'; sku: string; message: string };
 
 export default function ScannerScreen(): React.ReactElement {
@@ -35,10 +45,108 @@ export default function ScannerScreen(): React.ReactElement {
     }
   };
 
+  // A QR encoding a product payload is validated (SKU not already taken,
+  // category exists) and offered as an "Add product" action; anything else is
+  // treated as a SKU to look up. We never navigate from inside the scan
+  // callback — the user taps a button — so a single scan can't fan out into
+  // multiple screen pushes.
+  const handleScanned = async (data: string) => {
+    const product = parseProductPayload(data);
+    if (!product) { void lookup(data); return; }
+
+    setState({ kind: 'checking', sku: product.sku });
+    try {
+      const existing = await productsApi.getBySku(product.sku);
+      if (existing) {
+        setState({ kind: 'productExists', sku: product.sku, name: existing.name });
+        return;
+      }
+      if (!product.category) {
+        setState({ kind: 'error', sku: product.sku, message: sl.scanner.noCategoryInQr });
+        return;
+      }
+      const categories = await productsApi.getAllCategories();
+      const match = categories.find(
+        (c) => c.name.trim().toLowerCase() === product.category!.trim().toLowerCase(),
+      );
+      if (!match) {
+        setState({ kind: 'categoryMissing', product, category: product.category });
+        return;
+      }
+      setState({ kind: 'productReady', product, categoryId: match.id });
+    } catch (err) {
+      setState({ kind: 'error', sku: product.sku, message: formatApiError(err) });
+    }
+  };
+
   const { hasPermission, canAskPermission, requestPermission, scanned, handleScan, reset } =
-    useBarcode((result) => { void lookup(result.data); });
+    useBarcode((result) => { void handleScanned(result.data); });
 
   const resetAll = () => { setState({ kind: 'idle' }); setManualSku(''); reset(); };
+
+  // Direct create — scan-to-save. The button on the productReady card calls
+  // this; success shows a toast and resets the scanner for the next scan, no
+  // navigation. Avoids the "extra back-press" UX that pushing a form caused.
+  const createProductMutation = useMutation({
+    mutationFn: (vars: { product: ScannedProduct; categoryId: string }) =>
+      productsApi.create({
+        name:        vars.product.name,
+        sku:         vars.product.sku,
+        // No description in the QR → fall back to the product name so the
+        // backend always receives a non-empty value.
+        description: vars.product.description?.trim() || vars.product.name,
+        weight:      vars.product.weight ?? 0,
+        categoryId:  vars.categoryId,
+      }),
+    onMutate: () => setState({ kind: 'saving' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.products });
+      showToast(sl.scanner.productAdded, 'success');
+      resetAll();
+    },
+    onError: (err) => setState({ kind: 'error', sku: '', message: formatApiError(err) }),
+  });
+
+  // Inline create-category from the categoryMissing card. On success we
+  // pick up the new category id and transition straight to productReady, so
+  // the user can tap "Dodaj produkt" once more without re-scanning.
+  const createCategoryMutation = useMutation({
+    mutationFn: (vars: { name: string; product: ScannedProduct }) =>
+      // Mirror the name into description so the new category isn't created
+      // with an empty/null field.
+      productsApi.createCategory({ name: vars.name, description: vars.name }),
+    onSuccess: async (created, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+      // Old versions of product-service's POST /categories return Ok() with no
+      // body, so `created` may be empty / id may be undefined or the zero-GUID
+      // (00000000-0000-0000-0000-000000000000). Detect that and look the new
+      // category up by name as a fallback. Otherwise the next mutation would
+      // POST /products with a bad categoryId and the backend would reply
+      // "category with id 00000000-…-000000000000 was not found".
+      const isInvalidGuid = (id: string | undefined): boolean =>
+        !id || /^0+(?:-0+){4}$/.test(id);
+      let categoryId = created?.id ?? '';
+      if (isInvalidGuid(categoryId)) {
+        try {
+          const cats = await productsApi.getAllCategories();
+          const match = cats.find(
+            (c) => c.name.trim().toLowerCase() === vars.name.trim().toLowerCase(),
+          );
+          if (match) categoryId = match.id;
+        } catch {
+          // fall through — surfaced below as a clean error message
+        }
+      }
+      if (isInvalidGuid(categoryId)) {
+        setState({ kind: 'error', sku: '', message: formatApiError(new Error('Failed to resolve new category id.')) });
+        return;
+      }
+      showToast(sl.scanner.categoryCreated, 'success');
+      setState({ kind: 'productReady', product: vars.product, categoryId });
+    },
+    onError: (err) =>
+      setState({ kind: 'error', sku: '', message: formatApiError(err) }),
+  });
 
   const handleManualSubmit = () => {
     const sku = manualSku.trim();
@@ -50,7 +158,7 @@ export default function ScannerScreen(): React.ReactElement {
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.back}>← Nazaj</Text>
+          <Text style={styles.back}>← {sl.common.back}</Text>
         </TouchableOpacity>
         <Text style={styles.title}>{sl.scanner.title}</Text>
         <View style={{ width: 60 }} />
@@ -76,7 +184,7 @@ export default function ScannerScreen(): React.ReactElement {
           />
           {scanned && (
             <TouchableOpacity style={styles.resetBtn} onPress={resetAll}>
-              <Text style={styles.resetText}>{sl.scanner.scanning}</Text>
+              <Text style={styles.resetText}>{sl.scanner.scanAgain}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -85,6 +193,9 @@ export default function ScannerScreen(): React.ReactElement {
       <ResultPanel
         state={state}
         onOpen={(id) => router.push({ pathname: '/(tabs)/more/products/[id]', params: { id } })}
+        onAdd={(product, categoryId) => createProductMutation.mutate({ product, categoryId })}
+        onCreateCategory={(name, product) => createCategoryMutation.mutate({ name, product })}
+        creatingCategory={createCategoryMutation.isPending}
         onDismiss={resetAll}
       />
 
@@ -109,14 +220,79 @@ export default function ScannerScreen(): React.ReactElement {
   );
 }
 
-function ResultPanel({ state, onOpen, onDismiss }: { state: LookupState; onOpen: (id: string) => void; onDismiss: () => void }): React.ReactElement | null {
+function ResultPanel({ state, onOpen, onAdd, onCreateCategory, creatingCategory, onDismiss }: {
+  state: LookupState;
+  onOpen: (id: string) => void;
+  onAdd: (product: ScannedProduct, categoryId: string) => void;
+  onCreateCategory: (name: string, product: ScannedProduct) => void;
+  creatingCategory: boolean;
+  onDismiss: () => void;
+}): React.ReactElement | null {
   if (state.kind === 'idle') return null;
 
-  if (state.kind === 'searching') {
+  if (state.kind === 'searching' || state.kind === 'checking' || state.kind === 'saving') {
     return (
       <View style={styles.resultCard}>
         <ActivityIndicator color="#93c5fd" />
-        <Text style={styles.resultMeta}>SKU: {state.sku}</Text>
+        <Text style={styles.resultMeta}>
+          {state.kind === 'checking' ? sl.scanner.checking
+            : state.kind === 'saving' ? sl.scanner.saving
+            : `SKU: ${state.sku}`}
+        </Text>
+      </View>
+    );
+  }
+
+  if (state.kind === 'productReady') {
+    return (
+      <View style={[styles.resultCard, styles.resultFound]}>
+        <Text style={styles.resultTitle}>{state.product.name}</Text>
+        <Text style={styles.resultMeta}>SKU: {state.product.sku}</Text>
+        <View style={styles.resultActions}>
+          <TouchableOpacity style={styles.resultBtnPrimary} onPress={() => onAdd(state.product, state.categoryId)}>
+            <Text style={styles.resultBtnPrimaryText}>{sl.scanner.addProduct}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.resultBtnSecondary} onPress={onDismiss}>
+            <Text style={styles.resultBtnSecondaryText}>{sl.common.cancel}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  if (state.kind === 'productExists') {
+    return (
+      <View style={[styles.resultCard, styles.resultWarn]}>
+        <Text style={styles.resultTitle}>{sl.scanner.productExists}</Text>
+        <Text style={styles.resultMeta}>{state.name} · SKU: {state.sku}</Text>
+        <TouchableOpacity style={styles.resultBtnSecondary} onPress={onDismiss}>
+          <Text style={styles.resultBtnSecondaryText}>{sl.scanner.scanAgain}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (state.kind === 'categoryMissing') {
+    return (
+      <View style={[styles.resultCard, styles.resultWarn]}>
+        <Text style={styles.resultTitle}>{sl.scanner.categoryMissingTitle}</Text>
+        <Text style={styles.resultMeta}>
+          {sl.scanner.categoryMissingBody.replace('{category}', state.category)}
+        </Text>
+        <View style={styles.resultActions}>
+          <TouchableOpacity
+            style={[styles.resultBtnPrimary, creatingCategory && styles.resultBtnDisabled]}
+            disabled={creatingCategory}
+            onPress={() => onCreateCategory(state.category, state.product)}
+          >
+            {creatingCategory
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.resultBtnPrimaryText}>{sl.scanner.createCategory}</Text>}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.resultBtnSecondary} onPress={onDismiss}>
+            <Text style={styles.resultBtnSecondaryText}>{sl.scanner.scanAgain}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -128,7 +304,7 @@ function ResultPanel({ state, onOpen, onDismiss }: { state: LookupState; onOpen:
         <Text style={styles.resultMeta}>SKU: {state.product.sku}  ·  {state.product.weight} kg</Text>
         <View style={styles.resultActions}>
           <TouchableOpacity style={styles.resultBtnPrimary} onPress={() => onOpen(state.product.id)}>
-            <Text style={styles.resultBtnPrimaryText}>Odpri produkt</Text>
+            <Text style={styles.resultBtnPrimaryText}>{sl.scanner.openProduct}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.resultBtnSecondary} onPress={onDismiss}>
             <Text style={styles.resultBtnSecondaryText}>{sl.common.cancel}</Text>
@@ -183,6 +359,7 @@ const styles = StyleSheet.create({
   resultActions:         { flexDirection: 'row', gap: 8 },
   resultBtnPrimary:      { flex: 1, backgroundColor: '#3b82f6', paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
   resultBtnPrimaryText:  { color: '#fff', fontWeight: '700', fontSize: 13 },
+  resultBtnDisabled:     { opacity: 0.6 },
   resultBtnSecondary:    { flex: 1, borderWidth: 1, borderColor: '#334155', paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
   resultBtnSecondaryText:{ color: '#cbd5e1', fontWeight: '600', fontSize: 13 },
   manual:                { padding: 16, backgroundColor: '#1e293b' },

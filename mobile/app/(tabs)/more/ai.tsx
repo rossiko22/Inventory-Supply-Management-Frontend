@@ -149,7 +149,7 @@ export default function AiScreen(): React.ReactElement {
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.back}>← Nazaj</Text>
+          <Text style={styles.back}>← {sl.common.back}</Text>
         </TouchableOpacity>
         <Text style={styles.title}>{sl.ai.title}</Text>
         <View style={{ width: 60 }} />
@@ -158,7 +158,7 @@ export default function AiScreen(): React.ReactElement {
         feature="AI_ANALYSIS"
         fallback={
           <View style={styles.center}>
-            <Text style={styles.unavailableText}>Dostop zavrnjen.</Text>
+            <Text style={styles.unavailableText}>{sl.common.accessDenied}</Text>
           </View>
         }
       >

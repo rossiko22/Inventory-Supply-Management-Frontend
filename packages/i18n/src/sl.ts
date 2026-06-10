@@ -25,6 +25,10 @@ const sl = {
     fullName:           'Polno ime',
     signingIn:          'Prijavljanje…',
     creating:           'Ustvarjanje…',
+    emailInvalid:       'Vnesite veljaven e-poštni naslov.',
+    passwordRequired:   'Geslo je obvezno.',
+    passwordMin:        'Geslo mora imeti vsaj 6 znakov.',
+    nameRequired:       'Ime je obvezno.',
   },
   // Tabs (mobile)
   tabs: {
@@ -65,8 +69,8 @@ const sl = {
   // Stock / Inventory
   stock: {
     title:        'Zaloga',
-    addStock:     'Dodaj zalogo',
     consumeStock: 'Izdaja zaloge',
+    stockFromOrders: 'Zaloga nastane šele ob zaprtju naročila.',
     product:      'Produkt',
     warehouse:    'Skladišče',
     quantity:     'Količina',
@@ -229,6 +233,18 @@ const sl = {
     pendingBackend:'Funkcija čaka na posodobitev strežnika.',
     manualEntry:   'Ročni vnos SKU',
     openProduct:   'Odpri produkt',
+    scanAgain:     'Skeniraj znova',
+    checking:      'Preverjanje…',
+    productExists: 'Produkt s tem SKU že obstaja.',
+    addProduct:    'Dodaj produkt',
+    categoryMissingTitle: 'Kategorija ne obstaja',
+    categoryMissingBody:  'Kategorija »{category}« ne obstaja.',
+    openCategories: 'Odpri kategorije',
+    createCategory: 'Ustvari kategorijo',
+    saving:        'Shranjevanje…',
+    productAdded:  'Produkt dodan.',
+    categoryCreated: 'Kategorija ustvarjena.',
+    noCategoryInQr: 'QR koda mora vsebovati kategorijo.',
   },
   // AI
   ai: {
@@ -290,6 +306,7 @@ const sl = {
     yes:          'Da',
     no:           'Ne',
     selectPlaceholder: '— izberi —',
+    accessDenied: 'Dostop zavrnjen.',
   },
 };
 
